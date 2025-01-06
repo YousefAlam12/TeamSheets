@@ -17,8 +17,12 @@ Including another URLconf
 from django.urls import path
 from .views import test_api_view
 
+from api import views
+
 
 urlpatterns = [
     # API entry points should be defined here
-    path('test.json', test_api_view, name='api test')
+    path('test.json', test_api_view, name='api test'),
+    path('login', views.login_api, name="Login"),
+    path('isAuthenticated', views.isAuthenticated, name="isAuthenticated")
 ]

@@ -1,20 +1,69 @@
 <template>
-    <div class="container pt-3">
-        <div class="h1 text-center border rounded bg-light p-2 mb-3">
-            Login
+    <div class="container d-flex justify-content-center align-items-center">
+        <div class="card shadow" style="max-width: 600px; width: 100%; margin-top: 25%;">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Login</h2>
+                <form @submit.prevent="login">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input v-model="username" type="text" class="form-control" id="username" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input v-model="password" type="password" class="form-control" id="password" required />
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <span v-if="isLoading" class="spinner-border spinner-border-sm" role="status"
+                                aria-hidden="true"></span>
+                            Login
+                        </button>
+                    </div>
+                </form>
+
+                <p v-if="errorMessage" class="alert alert-danger mt-3" role="alert">{{ errorMessage }}</p>
+            </div>
         </div>
     </div>
-  </template>
-  
+</template>
+
 <script>
 export default {
     data() {
         return {
-            response_data: '',
+            username: '',
+            password: '',
+            errorMessage: ''
         }
     },
     async mounted() {
-        
+    },
+    methods: {
+        async login()
+        {
+            const response = await fetch('http://localhost:8000/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    'username' : this.username,
+                    'password' : this.password
+                }) 
+            })
+            if (response.ok) {
+                const data = await response.json()
+                console.log(data)
+                this.$router.push('/')
+            }
+            else {
+                this.errorMessage = 'Invalid Details'
+            }
+        }
     }
 }
 </script>
+
+<style>
+</style>

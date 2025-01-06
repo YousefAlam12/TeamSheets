@@ -16,13 +16,18 @@ const router = createRouter({
     ]
 })
 
-router.beforeEach((to, from, next) => {
-    const isAuthenticated = true
+router.beforeEach(async (to, from, next) => {
+    // const isAuthenticated = false
+    const response = await fetch('http://localhost:8000/isAuthenticated', {
+        credentials: 'include'
+    })
+    const data = await response.json()
+    console.log(data.isAuth)
 
-    if (to.meta.auth && !isAuthenticated) {
+    if (to.meta.auth && !data.isAuth) {
         next({name: 'Login'})
     }
-    else if (to.name == 'Login' && isAuthenticated) {
+    else if (to.name == 'Login' && data.isAuth) {
         next({name: 'Main'})
     }
     else {
