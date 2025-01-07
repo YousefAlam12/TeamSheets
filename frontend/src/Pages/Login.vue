@@ -13,11 +13,8 @@
                         <input v-model="password" type="password" class="form-control" id="password" required />
                     </div>
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <span v-if="isLoading" class="spinner-border spinner-border-sm" role="status"
-                                aria-hidden="true"></span>
-                            Login
-                        </button>
+                        <button type="submit" class="btn btn-primary">Login</button>
+                        <a href="/signup" class="btn btn-secondary mt-2">Signup</a>
                     </div>
                 </form>
 
@@ -52,13 +49,17 @@ export default {
                     'password' : this.password
                 }) 
             })
+            
+            const data = await response.json()
             if (response.ok) {
-                const data = await response.json()
+                // const data = await response.json()
                 console.log(data)
                 this.$router.push('/')
             }
             else {
-                this.errorMessage = 'Invalid Details'
+                // this.errorMessage = 'Invalid Details'
+                // const data = await response.json()
+                this.errorMessage = data.error
             }
         }
     }
