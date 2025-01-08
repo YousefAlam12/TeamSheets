@@ -37,10 +37,16 @@ def login_api(request):
 
         if user is not None:
             login(request, user)
-            return JsonResponse({'success' : 'login successful'})
+            return JsonResponse({'success': 'login successful'})
 
         else:
             return JsonResponse({'error': 'Invalid details'}, status=400)
+
+
+@login_required
+def logout_api(request):
+    logout(request)
+    return JsonResponse({'success': 'Logged Out'})
 
 
 def signup(request):
@@ -81,7 +87,7 @@ def signup(request):
 
             return JsonResponse({'success': 'Account creation successful'})
 
-        # Handle validation errors          
+        # Handle validation errors
         except ValidationError as e:
             errorMsg = next(iter(e.message_dict.values()))[0]
             return JsonResponse({'error': errorMsg}, status=400)

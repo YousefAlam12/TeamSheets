@@ -24,6 +24,7 @@ urlpatterns = [
     # API entry points should be defined here
     path('test.json', test_api_view, name='api test'),
     path('login', views.login_api, name="Login"),
+    path('logout', views.logout_api, name="Logout"),
     path('signup', views.signup, name="Signup"),
     path('isAuthenticated', views.isAuthenticated, name="isAuthenticated")
 ]

@@ -4,6 +4,7 @@ import Login from '../Pages/Login.vue'
 import Main from '../Pages/Main.vue'
 import Test from '../Pages/Test.vue'
 import Signup from '../Pages/Signup.vue'
+import Logout from '../Pages/Logout.vue'
 
 // let base = (import.meta.env.MODE == 'development') ? import.meta.env.BASE_URL : ''
 
@@ -12,6 +13,7 @@ const router = createRouter({
     history: createWebHistory(),
     routes: [
         {path: '/login', name: 'Login', component: Login},
+        {path: '/logout', name: 'Logout', component: Logout, meta: {auth: true}},
         {path: '/signup', name: 'Signup', component: Signup},
         {path: '/', name: 'Main', component: Main, meta: {auth: true}},
         {path: '/test', name: 'Test', component: Test, meta: {auth: true}},
