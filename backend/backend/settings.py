@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'api',
+    'django.contrib.gis',
+
 ]
 
 MIDDLEWARE = [
@@ -86,11 +88,14 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
+        # 'ENGINE': 'django.db.backends.sqlite3',
+        'ENGINE': 'django.contrib.gis.db.backends.spatialite',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
+# GDAL_LIBRARY_PATH = "/OSGeo4W/bin/gdal309.dll"
+GDAL_LIBRARY_PATH = str(Path(__file__).resolve().parent) + "/OSGeo4W/bin/gdal309.dll"
 
 # Password validation
 # https://docs.djangoproject.com/en/stable/ref/settings/#auth-password-validators

@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-# from django.contrib.gis.db import models
+from django.contrib.gis.db import models
 from datetime import date
 
 # Create your models here.
@@ -10,7 +10,7 @@ class User(AbstractUser):
     date_of_birth = models.DateField()
 
 class Game(models.Model):
-    # location = models.PointField()
+    location = models.PointField()
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     description = models.TextField(null=True)

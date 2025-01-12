@@ -1,3 +1,17 @@
+### Create conda environment
+Install miniconda https://docs.conda.io/en/latest/miniconda.html
+
+Create a conda environment for this project and activate the environment:
+
+$ conda create --name fyp python=3.11
+$ conda activate fyp
+
+install the following:
+
+```console
+conda install conda-forge::gdal
+```
+
 ### Install backend (Python) dependencies
 
 With the conda environment active, install the backend (Python) dependencies:

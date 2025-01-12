@@ -6,10 +6,15 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
 from .models import User
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import D
 import json
 
 
 def test_api_view(request):
+    user_location = Point(-74.0060, 40.7128)
+    print(f"loc: {user_location} and distance: {D(km=20)}")
+
     return JsonResponse({
         'message': 'Good response!'
     })
