@@ -5,15 +5,16 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
-from .models import User
+from .models import User, Game
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 import json
 
 
 def test_api_view(request):
-    user_location = Point(-74.0060, 40.7128)
-    print(f"loc: {user_location} and distance: {D(km=20)}")
+    user_location = Point(0.105618, 51.549457, srid=4326)
+    x = Game.objects.filter(location__distance_lt=(user_location, D(km=230)))
+    print(x)
 
     return JsonResponse({
         'message': 'Good response!'

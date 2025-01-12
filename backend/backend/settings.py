@@ -94,8 +94,9 @@ DATABASES = {
     }
 }
 
-# GDAL_LIBRARY_PATH = "/OSGeo4W/bin/gdal309.dll"
+SPATIALITE_LIBRARY_PATH = str(Path(__file__).resolve().parent) + "/OSGeo4W/bin/mod_spatialite.dll"
 GDAL_LIBRARY_PATH = str(Path(__file__).resolve().parent) + "/OSGeo4W/bin/gdal309.dll"
+# GDAL_LIBRARY_PATH = "/OSGeo4W/bin/gdal309.dll"
 
 # Password validation
 # https://docs.djangoproject.com/en/stable/ref/settings/#auth-password-validators
