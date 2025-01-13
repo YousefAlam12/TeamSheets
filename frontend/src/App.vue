@@ -15,8 +15,8 @@
                             Main Page
                         </router-link>
 
-                        <router-link class="nav-link" :to="{ name: 'Test' }">
-                            Test Page
+                        <router-link class="nav-link" :to="{ name: 'Games' }">
+                            Games Page
                         </router-link>
 
                         <router-link class="nav-link" :to="{ name: 'Logout' }">

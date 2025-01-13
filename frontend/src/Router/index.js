@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import Login from '../Pages/Login.vue'
 import Main from '../Pages/Main.vue'
-import Test from '../Pages/Test.vue'
+import Games from '../Pages/Games.vue'
 import Signup from '../Pages/Signup.vue'
 import Logout from '../Pages/Logout.vue'
 
@@ -16,7 +16,10 @@ const router = createRouter({
         {path: '/logout', name: 'Logout', component: Logout, meta: {auth: true}},
         {path: '/signup', name: 'Signup', component: Signup},
         {path: '/', name: 'Main', component: Main, meta: {auth: true}},
-        {path: '/test', name: 'Test', component: Test, meta: {auth: true}},
+        {path: '/games', name: 'Games', component: Games, meta: {auth: true}},
+
+        // catches invalid paths
+        { path: '/:catchAll(.*)', redirect: '/' }
     ]
 })
 

@@ -5,19 +5,21 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
-from .models import User, Game
+from .models import User, Game, Player
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 import json
 
 
 def test_api_view(request):
-    user_location = Point(0.105618, 51.549457, srid=4326)
+    user_location = Point(0.105618, 51.549457)
     x = Game.objects.filter(location__distance_lt=(user_location, D(km=230)))
+    games = [game.as_dict() for game in x]
     print(x)
+    print(games[1]['players'])
 
     return JsonResponse({
-        'message': 'Good response!'
+        'games': games
     })
 
 
@@ -97,3 +99,42 @@ def signup(request):
         except ValidationError as e:
             errorMsg = next(iter(e.message_dict.values()))[0]
             return JsonResponse({'error': errorMsg}, status=400)
+
+
+@login_required
+def games_api(request):
+    if request.method == 'GET':
+        print('getting games...')
+        games = Game.objects.all()
+        data = [game.as_dict() for game in games]
+        return JsonResponse({'games': data})
+
+    if request.method == 'POST':
+        POST = json.loads(request.body)
+        POST = POST['game']
+        print(POST)
+
+        # creating new game
+        newGame = Game(
+            name=POST['name'],
+            date=POST['date'],
+            start_time=POST['start_time'],
+            end_time=POST['end_time'],
+            description=POST['description'],
+            totalPlayers=POST['totalPlayers'],
+            price=POST['price'],
+            address=POST['address'],
+            postcode=POST['postcode'],
+            location=Point(POST['longitude'], POST['latitude']),
+            admin=request.user
+        )
+        newGame.save()
+
+        # create new player for the game (admin)
+        newPlayer = Player(
+            user=request.user,
+            game=newGame,
+        )
+        newPlayer.save()
+
+        return JsonResponse({'game' : newGame.as_dict()})

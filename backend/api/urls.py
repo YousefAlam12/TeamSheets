@@ -26,5 +26,7 @@ urlpatterns = [
     path('login', views.login_api, name="Login"),
     path('logout', views.logout_api, name="Logout"),
     path('signup', views.signup, name="Signup"),
-    path('isAuthenticated', views.isAuthenticated, name="isAuthenticated")
+    path('isAuthenticated', views.isAuthenticated, name="isAuthenticated"),
+
+    path('games', views.games_api, name="Games"),
 ]
