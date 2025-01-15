@@ -11,20 +11,8 @@
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
                 Create Game
             </button>
-            <div class="card mt-3" v-for="game in games">
-                <div class="card-header">{{ game.date }}</div>
-                <div class="card-body">
-                    <!-- <router-link class="nav-link" :to="{ name: 'GameDetails', params: {id: game.id, game: game} }"> -->
-                    <router-link class="nav-link" :to="{ name: 'GameDetails', params: {id: game.id} }">
-                        <h5 class="card-title">{{ game.name }} <span class="badge bg-primary">{{ game.players.length }}/{{ game.totalPlayers }}</span></h5>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item" >{{ game.start_time }} - {{ game.end_time }}</li>
-                            <li class="list-group-item" >£{{ game.price }}</li>
-                            <li class="list-group-item" >Pitch: {{ game.address }}</li>
-                        </ul>
-                    </router-link>
-                </div>
-            </div>
+
+            <DisplayGames :games="games"/>
         </div>
 
         <!-- Modal -->
@@ -93,7 +81,12 @@
 </template>
 
 <script>
+import DisplayGames from '../Components/DisplayGames.vue';
+
 export default {
+    components: {
+        DisplayGames
+    },
     data() {
         return {
             games: [],
@@ -143,6 +136,7 @@ export default {
             if (response.ok) {
                 console.log(data)
                 this.resetNewGame()
+                this.games = data.games
             }
             else {
                 this.errorMessage = data.error

@@ -15,7 +15,7 @@
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item" >{{ game.start_time }} - {{ game.end_time }}</li>
                             <li class="list-group-item" >£{{ game.price }}</li>
-                            <li class="list-group-item" >Pitch: {{ game.address }}</li>
+                            <li class="list-group-item" >Pitch: {{ game.address }} {{ game.postcode }}</li>
                         </ul>
                     </div>
                 </div>
@@ -29,7 +29,9 @@
                         </thead>
                         <tbody>
                             <tr v-for="player in game.players">
-                                <td v-if="player.team == 'A'">{{ player.username }}</td>
+                                <td v-if="player.team == 'A'">{{ player.username }}
+                                    <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -42,7 +44,9 @@
                         </thead>
                         <tbody>
                             <tr v-for="player in game.players">
-                                <td v-if="player.team == null">{{ player.username }}</td>
+                                <td v-if="player.team == null">{{ player.username }} 
+                                    <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -55,16 +59,20 @@
                         </thead>
                         <tbody>
                             <tr v-for="player in game.players">
-                                <td v-if="player.team == 'B'">{{ player.username }}</td>
+                                <td v-if="player.team == 'B'">{{ player.username }}
+                                    <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div class="text-center p-2">
+                <div class="text-center d-flex flex-column align-items-center p-2 mb-2">
                     <!-- <button v-if="!game.players.find(player => player.id == user.id)" @click="joinGame">Join</button> -->
-                    <button v-if="game.players ? !game.players.find(player => player.id == user.id) : ''" @click="joinGame">Join</button>
-                    <button v-else @click="">Leave</button>
+                    <label class="border p-2 rounded text-white bg-primary" v-if="game.players ? game.players.length >= game.totalPlayers : ''">Game is full</label>
+                    <button v-else-if="game.players ? !game.players.find(player => player.id == user.id) : ''" @click="joinGame" class="btn btn-success">Join</button>
+                    <button v-else @click="leaveGame" class="btn btn-warning">Leave</button>
+                    <button v-if="paid == false" class="btn btn-success mt-2" @click="payGame">Pay</button>
                 </div>
             </div>
     </div>
@@ -72,12 +80,12 @@
 
 <script>
 export default {
-    props: {
-        x: {
-            type: Object,
-            // required: true
-        }
-    },
+    // props: {
+    //     x: {
+    //         type: Object,
+    //         // required: true
+    //     }
+    // },
     computed: {
         id() {
             return this.$route.params.id
@@ -87,6 +95,7 @@ export default {
         return {
             user: '',
             game: [],
+            paid: null
         }
     },
     async mounted() {
@@ -97,6 +106,7 @@ export default {
         console.log(data)
         this.user = data.user
         this.game = data.game
+        this.paid = data.paid
         // console.log(user)
     },
     methods: {
@@ -116,9 +126,45 @@ export default {
             if (response.ok) {
                 console.log(data)
                 this.game = data.game
-                // window.location.reload()
+                this.paid = data.paid
             }
-        }
+        },
+        async leaveGame() {
+            const response = await fetch(`http://localhost:8000/game/${this.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    'leave' : true
+                }) 
+            })
+
+            const data = await response.json()
+            if (response.ok) {
+                this.game = data.game
+                this.paid = null
+            }
+        },
+        async payGame() {
+            const response = await fetch(`http://localhost:8000/game/${this.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    'paid' : true
+                }) 
+            })
+
+            const data = await response.json()
+            if (response.ok) {
+                this.game = data.game
+                this.paid = data.paid
+            }
+        },
     }
 }
 </script>

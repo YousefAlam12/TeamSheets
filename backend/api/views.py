@@ -4,6 +4,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+import datetime
 
 from .models import User, Game, Player
 from django.contrib.gis.geos import Point
@@ -118,8 +119,10 @@ def games_api(request):
         newGame = Game(
             name=POST['name'],
             date=POST['date'],
-            start_time=POST['start_time'],
-            end_time=POST['end_time'],
+            # start_time=POST['start_time'],
+            start_time=datetime.datetime.strptime(POST['start_time'], '%H:%M'),
+            # end_time=POST['end_time'],
+            end_time=datetime.datetime.strptime(POST['end_time'], '%H:%M'),
             description=POST['description'],
             totalPlayers=POST['totalPlayers'],
             price=POST['price'],
@@ -137,25 +140,59 @@ def games_api(request):
         )
         newPlayer.save()
 
-        return JsonResponse({'game' : newGame.as_dict()})
+        games = Game.objects.all()
+        data = [game.as_dict() for game in games]
+        return JsonResponse({'games': data})
 
 
+@login_required
 def game_api(request, game_id):
     game = Game.objects.get(id=game_id)
+    player = Player.objects.filter(user=request.user, game=game)
+
+    # checks if user is a player of the game
+    if player.count() > 0:
+        player = Player.objects.get(user=request.user, game=game)
+        paid = player.paid
+    else:
+        paid = None
 
     if request.method == 'GET':
-        return JsonResponse({'user' : request.user.as_dict(),
-                            'game': game.as_dict()})
+        return JsonResponse({'user': request.user.as_dict(),
+                            'paid': paid,
+                             'game': game.as_dict()})
 
+    # user joins game
     if request.method == 'POST':
         POST = json.loads(request.body)
         print(POST)
 
-        if POST['join']:
+        if POST.get('join'):
             print('joining game')
             player = Player(
                 user=request.user,
                 game=game,
             )
             player.save()
-            return JsonResponse({'game': game.as_dict()})
+
+    # leaves the user from the game
+    if request.method == 'DELETE':
+        DELETE = json.loads(request.body)
+        print(DELETE)
+
+        if DELETE.get('leave'):
+            print('-------------------------------')
+            print('leaving game')
+            player.delete()
+
+    # sets the pay status
+    if request.method == 'PUT':
+        PUT = json.loads(request.body)
+
+        if PUT.get('paid'):
+            player.paid = True
+            player.save()
+
+    # sends the game and pay status as dict to update the page
+    return JsonResponse({'game': game.as_dict(),
+                        'paid': player.paid})
