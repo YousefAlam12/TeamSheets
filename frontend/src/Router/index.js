@@ -5,6 +5,7 @@ import Main from '../Pages/Main.vue'
 import Games from '../Pages/Games.vue'
 import Signup from '../Pages/Signup.vue'
 import Logout from '../Pages/Logout.vue'
+import GameDetails from '../Pages/GameDetails.vue'
 
 // let base = (import.meta.env.MODE == 'development') ? import.meta.env.BASE_URL : ''
 
@@ -17,6 +18,28 @@ const router = createRouter({
         {path: '/signup', name: 'Signup', component: Signup},
         {path: '/', name: 'Main', component: Main, meta: {auth: true}},
         {path: '/games', name: 'Games', component: Games, meta: {auth: true}},
+
+
+        {
+            // path: '/gameDetails/:id', name: 'GameDetails', component: GameDetails, meta: {auth: true}, props: true,
+            path: '/gameDetails/:id', name: 'GameDetails', component: GameDetails, meta: {auth: true},
+            // check if game exists before going to page
+            beforeEnter: async (to, from, next) => {
+                const response = await fetch('http://localhost:8000/games', {
+                    credentials: 'include'
+                })
+                const data = await response.json()
+                const gameExists = await data.games.find(game => game.id == to.params.id)
+
+                if (gameExists) {
+                    // to.params.game = gameExists;
+                    next()
+                }
+                else {
+                    next({name: 'Main'})
+                }
+            }
+        },
 
         // catches invalid paths
         { path: '/:catchAll(.*)', redirect: '/' }

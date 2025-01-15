@@ -29,4 +29,5 @@ urlpatterns = [
     path('isAuthenticated', views.isAuthenticated, name="isAuthenticated"),
 
     path('games', views.games_api, name="Games"),
+    path('game/<int:game_id>', views.game_api, name="Game_api"),
 ]

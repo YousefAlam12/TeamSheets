@@ -138,3 +138,24 @@ def games_api(request):
         newPlayer.save()
 
         return JsonResponse({'game' : newGame.as_dict()})
+
+
+def game_api(request, game_id):
+    game = Game.objects.get(id=game_id)
+
+    if request.method == 'GET':
+        return JsonResponse({'user' : request.user.as_dict(),
+                            'game': game.as_dict()})
+
+    if request.method == 'POST':
+        POST = json.loads(request.body)
+        print(POST)
+
+        if POST['join']:
+            print('joining game')
+            player = Player(
+                user=request.user,
+                game=game,
+            )
+            player.save()
+            return JsonResponse({'game': game.as_dict()})

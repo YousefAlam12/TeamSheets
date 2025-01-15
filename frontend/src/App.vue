@@ -6,7 +6,7 @@
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" :aria-expanded="isExpanded.toString()" aria-label="Toggle navigation" @click="toggleNavbar">
                     <span class="navbar-toggler-icon"></span>
-                </button>
+        </button>
 
         <!-- Navbar links that collapse on smaller screens -->
         <div class="collapse navbar-collapse" id="navbarNav">

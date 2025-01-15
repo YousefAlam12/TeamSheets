@@ -10,6 +10,12 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, null=False)
     date_of_birth = models.DateField()
 
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username
+        }
+
 
 class Game(models.Model):
     name = models.CharField(max_length=100)
@@ -33,6 +39,8 @@ class Game(models.Model):
         start_time = self.start_time.strftime('%H:%M')
         end_time = self.end_time.strftime('%H:%M')
 
+        players = Player.objects.filter(game=self).select_related('user')
+
         return {
             'id': self.id,
             'name': self.name,
@@ -44,17 +52,19 @@ class Game(models.Model):
             'price': self.price,
             'address': self.address,
             'postcode': self.postcode,
-            'location': self.location.coords,  # Extract coordinates if location is a PointField
+            'location': self.location.coords,
             'admin': {
                 'id': self.admin.id,
                 'username': self.admin.username
             },
             'players': [
                 {
-                    'id': player.id,
-                    'username': player.username
-                } for player in self.players.all()
-            ]  # List of dictionaries for each player with id and username
+                    'id': player.user.id,
+                    'username': player.user.username,
+                    'team': player.team,
+                    'paid': player.paid
+                } for player in players
+            ]
         }
 
 
@@ -76,10 +86,6 @@ class Player(models.Model):
     def as_dict(self):
         return {
             'id': self.id,
-            'user': {
-                'id': self.user.id,
-                'username': self.user.username
-            },
             'game': self.game.id,
             'paid': self.paid,
             'team': self.team
