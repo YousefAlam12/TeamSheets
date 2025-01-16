@@ -14,10 +14,10 @@ import json
 
 def test_api_view(request):
     user_location = Point(0.105618, 51.549457)
-    x = Game.objects.filter(location__distance_lt=(user_location, D(km=230)))
+    x = Game.objects.filter(location__distance_lt=(user_location, D(km=5)))
     games = [game.as_dict() for game in x]
     print(x)
-    print(games[1]['players'])
+    print(games[0]['players'])
 
     return JsonResponse({
         'games': games
@@ -103,6 +103,7 @@ def signup(request):
 
 
 @login_required
+# returns all games in db
 def all_games_api(request):
     if request.method == 'GET':
         print('getting finished games...')
@@ -112,6 +113,7 @@ def all_games_api(request):
 
 
 @login_required
+# returns games which current user is in
 def my_games_api(request):
     if request.method == 'GET':
         print('getting my games...')
@@ -121,13 +123,8 @@ def my_games_api(request):
 
 
 @login_required
+# endpoint for games which create and return active games
 def games_api(request):
-    if request.method == 'GET':
-        print('getting active games...')
-        games = Game.objects.filter(fulltime=False)
-        data = [game.as_dict() for game in games]
-        return JsonResponse({'games': data})
-
     if request.method == 'POST':
         POST = json.loads(request.body)
         POST = POST['game']
@@ -137,9 +134,7 @@ def games_api(request):
         newGame = Game(
             name=POST['name'],
             date=POST['date'],
-            # start_time=POST['start_time'],
             start_time=datetime.datetime.strptime(POST['start_time'], '%H:%M'),
-            # end_time=POST['end_time'],
             end_time=datetime.datetime.strptime(POST['end_time'], '%H:%M'),
             description=POST['description'],
             totalPlayers=POST['totalPlayers'],
@@ -158,12 +153,13 @@ def games_api(request):
         )
         newPlayer.save()
 
-        games = Game.objects.all()
-        data = [game.as_dict() for game in games]
-        return JsonResponse({'games': data})
+    games = Game.objects.filter(fulltime=False)
+    data = [game.as_dict() for game in games]
+    return JsonResponse({'games': data})
 
 
 @login_required
+# endpoint for a game, handles joining/leaving game and pay status
 def game_api(request, game_id):
     game = Game.objects.get(id=game_id)
     player = Player.objects.filter(user=request.user, game=game)
