@@ -20,17 +20,25 @@
                     </div>
                 </div>
                 
-                <div class="card-body text-center d-flex">
+                <div class="card-body d-flex">
                     <table class="table table-primary">
                         <thead>
-                            <tr>
+                            <tr class="text-center">
                                 <th class="bg-primary">Team A</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="player in game.players">
-                                <td v-if="player.team == 'A'">{{ player.username }}
-                                    <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                <td v-if="player.team == 'A'" class="d-flex justify-content-between">
+                                    <div>
+                                        {{ player.username }} 
+                                        <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                    </div>
+
+                                    <div v-if="user.id == game.admin.id">
+                                        <button class="btn btn-sm btn-primary" @click="changeTeam(player, 'A')">A</button>
+                                        <button class="btn btn-sm btn-danger" @click="changeTeam(player, 'B')">B</button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -38,14 +46,22 @@
 
                     <table class="table table-light">
                         <thead>
-                            <tr>
+                            <tr class="text-center">
                                 <th>Players</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="player in game.players">
-                                <td v-if="player.team == null">{{ player.username }} 
-                                    <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                <td v-if="player.team == null" class="d-flex justify-content-between">
+                                    <div>
+                                        {{ player.username }} 
+                                        <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                    </div>
+
+                                    <div v-if="user.id == game.admin.id">
+                                        <button class="btn btn-sm btn-primary" @click="changeTeam(player, 'A')">A</button>
+                                        <button class="btn btn-sm btn-danger" @click="changeTeam(player, 'B')">B</button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -53,14 +69,22 @@
 
                     <table class="table table-danger">
                         <thead>
-                            <tr>
+                            <tr class="text-center">
                                 <th class="bg-danger">Team B</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="player in game.players">
-                                <td v-if="player.team == 'B'">{{ player.username }}
-                                    <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                <td v-if="player.team == 'B'" class="d-flex justify-content-between">
+                                    <div>
+                                        {{ player.username }} 
+                                        <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                    </div>
+
+                                    <div v-if="user.id == game.admin.id">
+                                        <button class="btn btn-sm btn-primary" @click="changeTeam(player, 'A')">A</button>
+                                        <button class="btn btn-sm btn-danger" @click="changeTeam(player, 'B')">B</button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -69,9 +93,11 @@
 
                 <div class="text-center d-flex flex-column align-items-center p-2 mb-2">
                     <!-- <button v-if="!game.players.find(player => player.id == user.id)" @click="joinGame">Join</button> -->
-                    <label class="border p-2 rounded text-white bg-primary" v-if="game.players ? game.players.length >= game.totalPlayers : ''">Game is full</label>
-                    <button v-else-if="game.players ? !game.players.find(player => player.id == user.id) : ''" @click="joinGame" class="btn btn-success">Join</button>
-                    <button v-else @click="leaveGame" class="btn btn-warning">Leave</button>
+                    <div v-if="!game.fulltime">
+                        <label class="border p-2 rounded text-white bg-primary" v-if="game.players ? game.players.length >= game.totalPlayers : ''">Game is full</label>
+                        <button v-else-if="game.players ? !game.players.find(player => player.id == user.id) : ''" @click="joinGame" class="btn btn-success">Join</button>
+                        <button v-else @click="leaveGame" class="btn btn-warning">Leave</button>
+                    </div>
                     <button v-if="paid == false" class="btn btn-success mt-2" @click="payGame">Pay</button>
                 </div>
             </div>
@@ -165,6 +191,23 @@ export default {
                 this.paid = data.paid
             }
         },
+        async changeTeam(player, team) {
+            const response = await fetch(`http://localhost:8000/teams/${this.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    'player' : player.id,
+                    'team' : team
+                })
+            })
+            const data = await response.json()
+            if (response.ok) {
+                this.game = data.game
+            }
+        }
     }
 }
 </script>

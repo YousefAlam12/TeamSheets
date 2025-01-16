@@ -25,7 +25,7 @@ const router = createRouter({
             path: '/gameDetails/:id', name: 'GameDetails', component: GameDetails, meta: {auth: true},
             // check if game exists before going to page
             beforeEnter: async (to, from, next) => {
-                const response = await fetch('http://localhost:8000/games', {
+                const response = await fetch('http://localhost:8000/allGames', {
                     credentials: 'include'
                 })
                 const data = await response.json()

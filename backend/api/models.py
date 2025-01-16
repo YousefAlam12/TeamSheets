@@ -30,6 +30,7 @@ class Game(models.Model):
     location = models.PointField()
     admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='admin_games')
     players = models.ManyToManyField(User, through='Player')
+    fulltime = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Game {self.id}"
@@ -53,6 +54,7 @@ class Game(models.Model):
             'address': self.address,
             'postcode': self.postcode,
             'location': self.location.coords,
+            'fulltime': self.fulltime,
             'admin': {
                 'id': self.admin.id,
                 'username': self.admin.username

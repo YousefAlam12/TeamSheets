@@ -17,7 +17,8 @@
         </ul>
 
         <div class="tab-content mt-3">
-            <p v-if="activeTab == 'myGames'">Show my games</p>
+            <!-- <p v-if="activeTab == 'myGames'">Show my games</p> -->
+            <DisplayGames v-if="activeTab == 'myGames'" :games="myGames" />
 
             <p v-if="activeTab == 'adminGames'">Show admined games</p>
 
@@ -28,14 +29,24 @@
   </template>
   
 <script>
+import DisplayGames from '../Components/DisplayGames.vue';
+
 export default {
+    components: {
+        DisplayGames
+    },
     data() {
         return {
             activeTab: 'myGames',
+            myGames : []
         }
     },
     async mounted() {
-        
+        const response = await fetch('http://localhost:8000/myGames', {
+            credentials: 'include'
+        })
+        const data = await response.json()
+        this.myGames = data.myGames
     },
     methods: {
         setActiveTab(tab) {

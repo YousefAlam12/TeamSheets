@@ -28,6 +28,9 @@ urlpatterns = [
     path('signup', views.signup, name="Signup"),
     path('isAuthenticated', views.isAuthenticated, name="isAuthenticated"),
 
+    path('allGames', views.all_games_api, name="All Games"),
+    path('myGames', views.my_games_api, name="My Games"),
     path('games', views.games_api, name="Games"),
     path('game/<int:game_id>', views.game_api, name="Game_api"),
+    path('teams/<int:game_id>', views.teams_api, name="Teams")
 ]

@@ -103,10 +103,28 @@ def signup(request):
 
 
 @login_required
+def all_games_api(request):
+    if request.method == 'GET':
+        print('getting finished games...')
+        games = Game.objects.all()
+        data = [game.as_dict() for game in games]
+        return JsonResponse({'games': data})
+
+
+@login_required
+def my_games_api(request):
+    if request.method == 'GET':
+        print('getting my games...')
+        games = Game.objects.filter(fulltime=False, players=request.user)
+        data = [game.as_dict() for game in games]
+        return JsonResponse({'myGames': data})
+
+
+@login_required
 def games_api(request):
     if request.method == 'GET':
-        print('getting games...')
-        games = Game.objects.all()
+        print('getting active games...')
+        games = Game.objects.filter(fulltime=False)
         data = [game.as_dict() for game in games]
         return JsonResponse({'games': data})
 
@@ -196,3 +214,25 @@ def game_api(request, game_id):
     # sends the game and pay status as dict to update the page
     return JsonResponse({'game': game.as_dict(),
                         'paid': player.paid})
+
+
+@login_required
+# api for choosing teams in the game page
+def teams_api(request, game_id):
+    game = Game.objects.get(id=game_id)
+
+    if request.method == 'PUT':
+        PUT = json.loads(request.body)
+        print(PUT)
+
+        player = Player.objects.get(user=PUT['player'], game=game_id)
+
+        # if player is on the same team as button clicked team will reset
+        if player.team == PUT['team']:
+            player.team = None
+        else:
+            player.team = PUT['team']
+
+        player.save()
+
+        return JsonResponse({'game': game.as_dict()})
