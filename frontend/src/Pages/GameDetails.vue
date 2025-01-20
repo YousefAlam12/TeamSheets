@@ -35,7 +35,7 @@
                                         <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
                                     </div>
 
-                                    <div v-if="user.id == game.admin.id">
+                                    <div v-if="user.id == game.admin.id && !game.fulltime">
                                         <button class="btn btn-sm btn-primary" @click="changeTeam(player, 'A')">A</button>
                                         <button class="btn btn-sm btn-danger" @click="changeTeam(player, 'B')">B</button>
                                     </div>
@@ -58,7 +58,7 @@
                                         <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
                                     </div>
 
-                                    <div v-if="user.id == game.admin.id">
+                                    <div v-if="user.id == game.admin.id && !game.fulltime">
                                         <button class="btn btn-sm btn-primary" @click="changeTeam(player, 'A')">A</button>
                                         <button class="btn btn-sm btn-danger" @click="changeTeam(player, 'B')">B</button>
                                     </div>
@@ -81,7 +81,7 @@
                                         <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
                                     </div>
 
-                                    <div v-if="user.id == game.admin.id">
+                                    <div v-if="user.id == game.admin.id && !game.fulltime">
                                         <button class="btn btn-sm btn-primary" @click="changeTeam(player, 'A')">A</button>
                                         <button class="btn btn-sm btn-danger" @click="changeTeam(player, 'B')">B</button>
                                     </div>

@@ -5,15 +5,16 @@ from datetime import date, time
 
 # Create your models here.
 
-
 class User(AbstractUser):
     email = models.EmailField(unique=True, null=False)
     date_of_birth = models.DateField()
+    postcode = models.CharField(max_length=50)
+    location = models.PointField()
 
     def as_dict(self):
         return {
             'id': self.id,
-            'username': self.username
+            'username': self.username,
         }
 
 
@@ -22,7 +23,7 @@ class Game(models.Model):
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
-    description = models.TextField(null=True)
+    description = models.TextField(null=True, blank=True)
     totalPlayers = models.IntegerField()
     price = models.FloatField()
     address = models.CharField(max_length=100)

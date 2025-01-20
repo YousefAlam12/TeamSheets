@@ -21,6 +21,11 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="postcode" class="form-label">Postcode</label>
+                        <input v-model="postcode" type="text" class="form-control" id="postcode" required />
+                    </div>
+
+                    <div class="mb-3">
                         <label for="dob" class="form-label">Date of Birth</label>
                         <input v-model="dob" type="date" class="form-control" id="dob" required />
                     </div>
@@ -59,17 +64,26 @@ export default {
             firstname: '',
             lastname: '',
             email: '',
+            postcode: '',
             dob: '',
             username: '',
             password1: '',
             password2: '',
-            errorMessage: ''
+            errorMessage: '',
+            longitude: null,
+            latitude: null
         }
     },
     async mounted() {
     },
     methods: {
         async createAccount() {
+            await this.findGeo(this.postcode)
+            if (!this.longitude || !this.latitude) {
+                this.errorMessage = "Invalid Postcode.";
+                return
+            }
+
             const response = await fetch('http://localhost:8000/signup', {
                 method: 'POST',
                 headers: {
@@ -80,10 +94,13 @@ export default {
                     'firstname' : this.firstname,
                     'lastname' : this.lastname,
                     'email' : this.email,
+                    'postcode' : this.postcode,
                     'dob' : this.dob,
                     'username' : this.username,
                     'password1' : this.password1,
                     'password2' : this.password2,
+                    'longitude' : this.longitude,
+                    'latitude' : this.latitude
                 }) 
             })
 
@@ -95,7 +112,20 @@ export default {
             else {
                 this.errorMessage = data.error
             }
-        }
+        },
+        async findGeo(postcode) {
+            console.log(postcode)
+            const response = await fetch(`https://api.postcodes.io/postcodes/${postcode}`)
+            const data = await response.json()
+            if (response.ok) {
+                console.log(data.result.longitude)
+                this.longitude = data.result.longitude
+                this.latitude = data.result.latitude
+            }
+            else {
+                console.log(data.error)
+            }
+        },
     }
 }
 </script>

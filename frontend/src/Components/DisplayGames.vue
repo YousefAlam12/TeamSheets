@@ -1,6 +1,9 @@
 <template>
     <div class="card mt-3" v-for="game in games">
-        <div class="card-header">{{ game.date }}</div>
+        <div class="card-header">
+            {{ game.date }}
+            <span v-if="game.fulltime" class="badge bg-warning">Fulltime</span>
+        </div>
         <div class="card-body">
             <!-- <router-link class="nav-link" :to="{ name: 'GameDetails', params: {id: game.id, game: game} }"> -->
             <router-link class="nav-link" :to="{ name: 'GameDetails', params: { id: game.id } }">

@@ -5,19 +5,32 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 import datetime
+from django.utils.timezone import now
 
 from .models import User, Game, Player
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
+from django.contrib.gis.db.models.functions import Distance
 import json
 
 
 def test_api_view(request):
-    user_location = Point(0.105618, 51.549457)
-    x = Game.objects.filter(location__distance_lt=(user_location, D(km=5)))
+    # user_location = Point(0.105618, 51.549457)
+    # user = User.objects.get(id=1)
+    # user_location = user.location
+    # x = Game.objects.filter(location__distance_lte=(user_location, D(km=5)))
+    # games = [game.as_dict() for game in x]
+    # print(x)
+    # print(games[0]['players'])
+
+    # return JsonResponse({
+    #     'games': games
+    # })
+
+    user = User.objects.get(id=1)
+    user_location = user.location
+    x = Game.objects.annotate(distance=Distance('location', request.user.location)).order_by('distance', 'date')
     games = [game.as_dict() for game in x]
-    print(x)
-    print(games[0]['players'])
 
     return JsonResponse({
         'games': games
@@ -70,6 +83,8 @@ def signup(request):
         lastname = POST['lastname']
         email = POST['email']
         dob = POST['dob']
+        postcode = POST['postcode']
+        location = Point(POST['longitude'], POST['latitude'])
         username = POST['username']
         password1 = POST['password1']
         password2 = POST['password2']
@@ -85,6 +100,8 @@ def signup(request):
                 last_name=lastname,
                 email=email,
                 date_of_birth=dob,
+                postcode=postcode,
+                location=location,
                 username=username
             )
             newUser.set_password(password1)
@@ -116,10 +133,20 @@ def all_games_api(request):
 # returns games which current user is in
 def my_games_api(request):
     if request.method == 'GET':
-        print('getting my games...')
-        games = Game.objects.filter(fulltime=False, players=request.user)
-        data = [game.as_dict() for game in games]
-        return JsonResponse({'myGames': data})
+        today = datetime.datetime.today().date()
+
+        games = Game.objects.filter(fulltime=False, players=request.user, date__gte=today).order_by('date')
+        myGames = [game.as_dict() for game in games]
+
+        games = Game.objects.filter(admin=request.user).order_by('-date')
+        admin_games = [game.as_dict() for game in games]
+
+        games = Game.objects.filter(players=request.user, date__lt=today).order_by('-date')
+        played_games = [game.as_dict() for game in games]
+
+        return JsonResponse({'myGames': myGames,
+                             'adminGames': admin_games,
+                             'playedGames': played_games})
 
 
 @login_required
@@ -153,7 +180,10 @@ def games_api(request):
         )
         newPlayer.save()
 
-    games = Game.objects.filter(fulltime=False)
+    today = datetime.datetime.today().date()
+    # games = Game.objects.filter(fulltime=False, date__gte=today).order_by('date')
+    # orders games by distance from user
+    games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(fulltime=False, date__gte=today).order_by('distance', 'date')
     data = [game.as_dict() for game in games]
     return JsonResponse({'games': data})
 

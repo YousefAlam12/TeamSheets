@@ -8,21 +8,23 @@
             <li class="nav-item">
                 <button class="nav-link" :class="{ active: activeTab === 'myGames' }" @click="setActiveTab('myGames')">My Games</button>
             </li>
-            <li class="nav-item">
-                <button class="nav-link" :class="{ active: activeTab === 'adminGames' }" @click="setActiveTab('adminGames')">Admin Games</button>
-            </li>
+            
             <li class="nav-item">
                 <button class="nav-link" :class="{ active: activeTab === 'playedGames' }" @click="setActiveTab('playedGames')">Played Games</button>
+            </li>
+
+            <li class="nav-item">
+                <button class="nav-link" :class="{ active: activeTab === 'adminGames' }" @click="setActiveTab('adminGames')">Admin Games</button>
             </li>
         </ul>
 
         <div class="tab-content mt-3">
             <!-- <p v-if="activeTab == 'myGames'">Show my games</p> -->
             <DisplayGames v-if="activeTab == 'myGames'" :games="myGames" />
+            
+            <DisplayGames v-if="activeTab == 'playedGames'" :games="playedGames" />
 
-            <p v-if="activeTab == 'adminGames'">Show admined games</p>
-
-            <p v-if="activeTab == 'playedGames'">Show played games</p>
+            <DisplayGames v-if="activeTab == 'adminGames'" :games="adminGames" />
         </div>
 
     </div>
@@ -38,7 +40,9 @@ export default {
     data() {
         return {
             activeTab: 'myGames',
-            myGames : []
+            myGames : [],
+            adminGames : [],
+            playedGames : []
         }
     },
     async mounted() {
@@ -47,6 +51,8 @@ export default {
         })
         const data = await response.json()
         this.myGames = data.myGames
+        this.adminGames = data.adminGames
+        this.playedGames = data.playedGames
     },
     methods: {
         setActiveTab(tab) {

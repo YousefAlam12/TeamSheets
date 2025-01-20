@@ -22,7 +22,7 @@ from api import views
 
 urlpatterns = [
     # API entry points should be defined here
-    path('test.json', test_api_view, name='api test'),
+    path('test', test_api_view, name='api test'),
     path('login', views.login_api, name="Login"),
     path('logout', views.logout_api, name="Logout"),
     path('signup', views.signup, name="Signup"),
