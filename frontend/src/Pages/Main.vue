@@ -1,7 +1,7 @@
 <template>
     <div class="container pt-3">
         <div class="h1 text-center border rounded bg-light p-2 mb-3">
-            Main
+            Home
         </div>
 
         <ul class="nav nav-tabs">

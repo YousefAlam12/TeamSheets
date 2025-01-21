@@ -11,15 +11,15 @@
         <!-- Navbar links that collapse on smaller screens -->
         <div class="collapse navbar-collapse" id="navbarNav">
                     <div class="navbar-nav">
-                        <router-link class="nav-link" :to="{ name: 'Main' }">
-                            Main Page
+                        <router-link class="nav-link" exact-active-class="active" :to="{ name: 'Main' }">
+                            Home
                         </router-link>
 
-                        <router-link class="nav-link" :to="{ name: 'Games' }">
-                            Games Page
+                        <router-link class="nav-link" exact-active-class="active" :to="{ name: 'Games' }">
+                            Games
                         </router-link>
 
-                        <router-link class="nav-link" :to="{ name: 'Logout' }">
+                        <router-link class="nav-link" exact-active-class="active" :to="{ name: 'Logout' }">
                             Logout
                         </router-link>
                     </div>
@@ -115,4 +115,9 @@ export default {
         -ms-flex-align: center;
         align-items: center;
         }
+
+    .nav-link.active {
+        font-weight: bold;
+        border-bottom: solid blue;
+    }
 </style>

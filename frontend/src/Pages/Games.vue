@@ -8,14 +8,21 @@
                 {{ errorMessage }}
             </div>
 
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                Create Game
-            </button>
+            <div class="d-flex">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                    Create Game
+                </button>
 
-            <DisplayGames :games="games"/>
+                <button type="button" class="btn btn-info ms-auto" data-bs-toggle="modal" data-bs-target="#filterModal">
+                    Filter
+                </button>
+            </div>
+
+            <!-- <DisplayGames :games="games"/> -->
+            <DisplayGames :games="shownGames"/>
         </div>
 
-        <!-- Modal -->
+        <!-- Create new game Modal -->
         <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -77,6 +84,36 @@
                 </div>
             </div>
         </div>
+
+
+        <!-- Filter Modal -->
+        <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="filterModalLabel">Filter</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="filter-date" class="form-label">Date</label>
+                            <input v-model="filter.date" type="date" class="form-control" id="filter-date">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price</label>
+                            <input v-model="filter.price" type="number" class="form-control" id="filter-price" min="0">
+                            <small id="priceInfo" class="form-text text-muted">All games upto selected price</small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="resetFilters">Clear Filters</button>
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="filterGames(games)">Apply Filters</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -103,7 +140,12 @@ export default {
                 longitude: null,
                 latitude: null
             },
-            errorMessage : ''
+            errorMessage : '',
+            shownGames : [],
+            filter : {
+                date: null,
+                price: null
+            }
         }
     },
     async mounted() {
@@ -113,6 +155,7 @@ export default {
         const data = await response.json()
         console.log(data)
         this.games = data.games
+        this.shownGames = data.games
     },
     methods: {
         async createGame() {
@@ -170,6 +213,20 @@ export default {
                 latitude: null
             }
             this.errorMessage = ''
+        },
+        filterGames(filteredGames) {
+            if (this.filter.date != null) {
+                filteredGames = filteredGames.filter(game => game.date == this.filter.date)
+            }
+            if (this.filter.price != null && typeof this.filter.price == 'number') {
+                filteredGames = filteredGames.filter(game => game.price <= this.filter.price)
+            }
+            this.shownGames = filteredGames
+        },
+        resetFilters() {
+            this.shownGames = this.games
+            Object.keys(this.filter).forEach(key => {
+                this.filter[key] = null})
         }
     }
 }
