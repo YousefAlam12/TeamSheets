@@ -58,12 +58,12 @@
 
                         <div class="mb-3">
                             <label for="total-players" class="form-label">Total Players</label>
-                            <input v-model="newGame.totalPlayers" type="number" class="form-control" id="total-players">
+                            <input v-model="newGame.totalPlayers" type="number" class="form-control" id="total-players" min="10" max="22">
                         </div>
 
                         <div class="mb-3">
                             <label for="price" class="form-label">Price</label>
-                            <input v-model="newGame.price" type="number" class="form-control" id="price">
+                            <input v-model="newGame.price" type="number" class="form-control" id="price" min="0">
                         </div>
 
                         <div class="mb-3">
@@ -164,6 +164,15 @@ export default {
                 this.errorMessage = "Invalid Postcode.";
                 return
             }
+            if (this.newGame.totalPlayers < 10 || this.newGame.totalPlayers > 22 || this.newGame.totalPlayers % 2 != 0) {
+                this.errorMessage = "Total players must be between 10-22 (11-5 aside)"
+                return
+            }
+            if (this.newGame.price < 0) {
+                this.errorMessage = "Invalid price"
+                return
+            }
+
             const response = await fetch('http://localhost:8000/games', {
                 method: 'POST',
                 headers: {
@@ -180,10 +189,11 @@ export default {
                 console.log(data)
                 this.resetNewGame()
                 this.games = data.games
+                this.shownGames = data.games
             }
             else {
                 this.errorMessage = data.error
-                this.errorMessage = 'Invalid details'
+                // this.errorMessage = 'Invalid details'
             }
         },
         async findGeo(postcode) {
@@ -197,6 +207,8 @@ export default {
             }
             else {
                 console.log(data.error)
+                this.newGame.longitude = null
+                this.newGame.latitude = null
             }
         },
         resetNewGame() {

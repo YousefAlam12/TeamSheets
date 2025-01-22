@@ -157,6 +157,13 @@ def games_api(request):
         POST = POST['game']
         print(POST)
 
+        # check if necessary fields are filled
+        required_fields = ['name', 'date', 'start_time', 'end_time', 'totalPlayers', 'price', 'address', 'postcode', 'longitude', 'latitude']
+
+        for field in required_fields:
+            if not POST.get(field):
+                return JsonResponse({'error': f'Missing field: {field}'}, status=400)
+
         # creating new game
         newGame = Game(
             name=POST['name'],
