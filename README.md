@@ -3,8 +3,10 @@ Install miniconda https://docs.conda.io/en/latest/miniconda.html
 
 Create a conda environment for this project and activate the environment:
 
+```console
 $ conda create --name fyp python=3.11
 $ conda activate fyp
+```
 
 install the following:
 

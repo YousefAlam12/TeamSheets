@@ -159,6 +159,7 @@ export default {
     },
     methods: {
         async createGame() {
+            // validating fields 
             await this.findGeo(this.newGame.postcode)
             if (!this.newGame.longitude || !this.newGame.latitude) {
                 this.errorMessage = "Invalid Postcode.";
