@@ -15,7 +15,35 @@ class User(AbstractUser):
         return {
             'id': self.id,
             'username': self.username,
+            # 'stats': self.stats
         }
+    
+    @property
+    def stats(self):
+        ratings = self.ratings.all()
+
+        if len(ratings) <= 0:
+            return None
+
+        stats = {
+            'attack': 0,
+            'defence': 0,
+            'strength': 0,
+            'speed': 0,
+            'technique': 0
+            }
+
+        for r in ratings:
+            stats['attack'] += r.attack
+            stats['defence'] += r.defence
+            stats['strength'] += r.strength
+            stats['speed'] += r.speed
+            stats['technique'] += r.technique
+        
+        for s in stats:
+            stats[s] /= len(ratings)
+        
+        return stats
 
 
 class Game(models.Model):
@@ -65,7 +93,8 @@ class Game(models.Model):
                     'id': player.user.id,
                     'username': player.user.username,
                     'team': player.team,
-                    'paid': player.paid
+                    'paid': player.paid,
+                    'stats': player.user.stats
                 } for player in players
             ]
         }
@@ -93,3 +122,17 @@ class Player(models.Model):
             'paid': self.paid,
             'team': self.team
         }
+
+
+class Rating(models.Model):
+    rater = models.ForeignKey(User, related_name="players_rated", on_delete=models.CASCADE)
+    ratee = models.ForeignKey(User, related_name="ratings", on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    attack = models.FloatField()
+    defence = models.FloatField()
+    strength = models.FloatField()
+    speed = models.FloatField()
+    technique = models.FloatField()
+
+    def __str__(self):
+        return f"{self.rater} rated {self.ratee} for {self.game}"

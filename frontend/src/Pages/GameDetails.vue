@@ -20,7 +20,7 @@
                     </div>
                 </div>
                 
-                <div class="card-body d-flex">
+                <div class="card-body d-flex teams">
                     <table class="table table-primary">
                         <thead>
                             <tr class="text-center">
@@ -33,9 +33,18 @@
                                     <div>
                                         {{ player.username }} 
                                         <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                        <small class="form-text text-muted">
+                                            <div class="d-flex flex-row bd-highlight">
+                                                <div class="p-2 bd-highlight">atk: {{ player.stats.attack }}</div>
+                                                <div class="p-2 bd-highlight">def: {{ player.stats.defence }}</div>
+                                                <div class="p-2 bd-highlight">str: {{ player.stats.strength }}</div>
+                                                <div class="p-2 bd-highlight">spd: {{ player.stats.speed }}</div>
+                                                <div class="p-2 bd-highlight">teq: {{ player.stats.technique }}</div>
+                                            </div>
+                                        </small>
                                     </div>
 
-                                    <div v-if="user.id == game.admin.id && !game.fulltime">
+                                    <div class="d-flex align-items-center" v-if="user.id == game.admin.id && !game.fulltime">
                                         <button class="btn btn-sm btn-primary" @click="changeTeam(player, 'A')">A</button>
                                         <button class="btn btn-sm btn-danger" @click="changeTeam(player, 'B')">B</button>
                                     </div>
@@ -211,3 +220,11 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+@media (max-width: 991px) {
+    .teams {
+        flex-direction: column;
+    }
+}
+</style>

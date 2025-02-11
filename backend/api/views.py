@@ -27,14 +27,20 @@ def test_api_view(request):
     #     'games': games
     # })
 
-    user = User.objects.get(id=1)
-    user_location = user.location
-    x = Game.objects.annotate(distance=Distance('location', request.user.location)).order_by('distance', 'date')
-    games = [game.as_dict() for game in x]
+    # user = User.objects.get(id=1)
+    # user_location = user.location
+    # x = Game.objects.annotate(distance=Distance('location', request.user.location)).order_by('distance', 'date')
+    # games = [game.as_dict() for game in x]
 
+    # return JsonResponse({
+    #     'games': games
+    # })
+
+    print(request.user.stats)
     return JsonResponse({
-        'games': games
-    })
+        'user': request.user.as_dict(),
+        # 'stats': request.user.stats
+    }) 
 
 
 def isAuthenticated(request):
