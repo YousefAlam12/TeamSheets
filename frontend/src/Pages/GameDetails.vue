@@ -19,8 +19,15 @@
                         </ul>
                     </div>
                 </div>
+
+                <!-- temp -->
+                 <!-- ------------------------------------------------------------------------------ -->
+                <div class="text-center d-flex flex-column align-items-center p-2 mb-2">
+                    <button @click="balanceTeams">Balance Teams</button>
+                </div>
+                <!-- ------------------------------------------------------------------------------ -->
                 
-                <div class="card-body d-flex teams">
+                <div class="card-body d-flex align-items-start teams">
                     <table class="table table-primary">
                         <thead>
                             <tr class="text-center">
@@ -34,12 +41,15 @@
                                         {{ player.username }} 
                                         <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
                                         <small class="form-text text-muted">
-                                            <div class="d-flex flex-row bd-highlight">
-                                                <div class="p-2 bd-highlight">atk: {{ player.stats.attack }}</div>
-                                                <div class="p-2 bd-highlight">def: {{ player.stats.defence }}</div>
-                                                <div class="p-2 bd-highlight">str: {{ player.stats.strength }}</div>
-                                                <div class="p-2 bd-highlight">spd: {{ player.stats.speed }}</div>
-                                                <div class="p-2 bd-highlight">teq: {{ player.stats.technique }}</div>
+                                            <div v-if="player.stats" class="d-flex flex-row bd-highlight">
+                                                <div class="pe-2 bd-highlight">atk: {{ player.stats.attack }}</div>
+                                                <div class="pe-2 bd-highlight">def: {{ player.stats.defence }}</div>
+                                                <div class="pe-2 bd-highlight">str: {{ player.stats.strength }}</div>
+                                                <div class="pe-2 bd-highlight">spd: {{ player.stats.speed }}</div>
+                                                <div class="pe-2 bd-highlight">teq: {{ player.stats.technique }}</div>
+                                            </div>
+                                            <div v-else class="d-flex flex-row bd-highlight">
+                                                <div class="pe-2 bd-highlight">New Player</div>
                                             </div>
                                         </small>
                                     </div>
@@ -65,6 +75,18 @@
                                     <div>
                                         {{ player.username }} 
                                         <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                        <small class="form-text text-muted">
+                                            <div v-if="player.stats" class="d-flex flex-row bd-highlight">
+                                                <div class="pe-2 bd-highlight">atk: {{ player.stats.attack }}</div>
+                                                <div class="pe-2 bd-highlight">def: {{ player.stats.defence }}</div>
+                                                <div class="pe-2 bd-highlight">str: {{ player.stats.strength }}</div>
+                                                <div class="pe-2 bd-highlight">spd: {{ player.stats.speed }}</div>
+                                                <div class="pe-2 bd-highlight">teq: {{ player.stats.technique }}</div>
+                                            </div>
+                                            <div v-else class="d-flex flex-row bd-highlight">
+                                                <div class="pe-2 bd-highlight">New Player</div>
+                                            </div>
+                                        </small>
                                     </div>
 
                                     <div v-if="user.id == game.admin.id && !game.fulltime">
@@ -88,6 +110,18 @@
                                     <div>
                                         {{ player.username }} 
                                         <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                        <small class="form-text text-muted">
+                                            <div v-if="player.stats" class="d-flex flex-row bd-highlight">
+                                                <div class="pe-2 bd-highlight">atk: {{ player.stats.attack }}</div>
+                                                <div class="pe-2 bd-highlight">def: {{ player.stats.defence }}</div>
+                                                <div class="pe-2 bd-highlight">str: {{ player.stats.strength }}</div>
+                                                <div class="pe-2 bd-highlight">spd: {{ player.stats.speed }}</div>
+                                                <div class="pe-2 bd-highlight">teq: {{ player.stats.technique }}</div>
+                                            </div>
+                                            <div v-else class="d-flex flex-row bd-highlight">
+                                                <div class="pe-2 bd-highlight">New Player</div>
+                                            </div>
+                                        </small>
                                     </div>
 
                                     <div v-if="user.id == game.admin.id && !game.fulltime">
@@ -211,6 +245,15 @@ export default {
                     'player' : player.id,
                     'team' : team
                 })
+            })
+            const data = await response.json()
+            if (response.ok) {
+                this.game = data.game
+            }
+        },
+        async balanceTeams() {
+            const response = await fetch(`http://localhost:8000/balanceTeams/${this.id}`, {
+                credentials: 'include'
             })
             const data = await response.json()
             if (response.ok) {
