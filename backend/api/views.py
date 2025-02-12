@@ -80,13 +80,15 @@ class TeamBalancingProblem(Problem):
 def balanceTeams(request, game_id):
     players = Player.objects.filter(game=game_id).select_related('user')
 
+    # try find sweet spot for different size game and change params 
+
     # creating and solving the balancing problem using nsga-ii
     problem = TeamBalancingProblem(players)
-    algorithm = NSGA2(pop_size=50, mutation=PM(prob=0.3))
-    # algorithm = NSGA2(pop_size=20, mutation=PM(prob=0.3))
+    # algorithm = NSGA2(pop_size=50, mutation=PM(prob=0.3))
+    algorithm = NSGA2(pop_size=20, mutation=PM(prob=0.3))
 
-    result = minimize(problem, algorithm, termination=("n_gen", 100), verbose=False)
-    # result = minimize(problem, algorithm, termination=("n_gen", 50), verbose=False)
+    # result = minimize(problem, algorithm, termination=("n_gen", 100), verbose=False)
+    result = minimize(problem, algorithm, termination=("n_gen", 50), verbose=False)
 
     # getting all soluitions where they have equal/fair amount of players
     valid_solutions = []

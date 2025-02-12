@@ -22,7 +22,7 @@
 
                 <!-- temp -->
                  <!-- ------------------------------------------------------------------------------ -->
-                <div class="text-center d-flex flex-column align-items-center p-2 mb-2">
+                <div v-if="user.id && (user.id == game.admin.id && !game.fulltime)" class="text-center d-flex flex-column align-items-center p-2 mb-2">
                     <button @click="balanceTeams">Balance Teams</button>
                 </div>
                 <!-- ------------------------------------------------------------------------------ -->
@@ -141,12 +141,15 @@
 
                 <div class="text-center d-flex flex-column align-items-center p-2 mb-2">
                     <!-- <button v-if="!game.players.find(player => player.id == user.id)" @click="joinGame">Join</button> -->
+                    <button v-if="paid == false" class="btn btn-success mb-2" @click="payGame">Pay</button>
                     <div v-if="!game.fulltime">
                         <label class="border p-2 rounded text-white bg-primary" v-if="game.players ? game.players.length >= game.totalPlayers : ''">Game is full</label>
-                        <button v-else-if="game.players ? !game.players.find(player => player.id == user.id) : ''" @click="joinGame" class="btn btn-success">Join</button>
-                        <button v-else @click="leaveGame" class="btn btn-warning">Leave</button>
+                        <!-- <button v-else-if="game.players ? !game.players.find(player => player.id == user.id) : ''" @click="joinGame" class="btn btn-success">Join</button> -->
+                        <div v-else class="mt-2">
+                            <button v-if="game.players ? !game.players.find(player => player.id == user.id) : ''" @click="joinGame" class="btn btn-success">Join</button>
+                            <button v-else @click="leaveGame" class="btn btn-warning">Leave</button>
+                        </div>
                     </div>
-                    <button v-if="paid == false" class="btn btn-success mt-2" @click="payGame">Pay</button>
                 </div>
             </div>
     </div>
