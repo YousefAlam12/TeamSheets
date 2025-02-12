@@ -26,8 +26,13 @@
                     <button @click="balanceTeams">Balance Teams</button>
                 </div>
                 <!-- ------------------------------------------------------------------------------ -->
-                
-                <div class="card-body d-flex align-items-start teams">
+                <div v-if="loading" class="d-flex justify-content-center w-100">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+
+                <div v-else class="card-body d-flex align-items-start teams">
                     <table class="table table-primary">
                         <thead>
                             <tr class="text-center">
@@ -164,7 +169,8 @@ export default {
         return {
             user: '',
             game: [],
-            paid: null
+            paid: null,
+            loading: false
         }
     },
     async mounted() {
@@ -252,6 +258,7 @@ export default {
             }
         },
         async balanceTeams() {
+            this.loading = true
             const response = await fetch(`http://localhost:8000/balanceTeams/${this.id}`, {
                 credentials: 'include'
             })
@@ -259,6 +266,7 @@ export default {
             if (response.ok) {
                 this.game = data.game
             }
+            this.loading = false
         }
     }
 }
