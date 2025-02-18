@@ -22,8 +22,13 @@
 
                 <!-- temp -->
                  <!-- ------------------------------------------------------------------------------ -->
-                <div v-if="user.id && (user.id == game.admin.id && !game.fulltime)" class="text-center d-flex flex-column align-items-center p-2 mb-2">
-                    <button @click="balanceTeams">Balance Teams</button>
+                 <div class="alert alert-danger mt-3" role="alert" v-if="error">
+                    {{ error }}
+                </div>
+                
+                 <div v-if="user.id && (user.id == game.admin.id && !game.fulltime)" class="text-center d-flex flex-column align-items-center p-2 mb-2">
+                    <button @click="balanceTeams" class="btn btn-primary">Balance Teams</button>
+                    <button @click="fulltime" class="btn btn-info mt-3">Fulltime</button>
                 </div>
                 <!-- ------------------------------------------------------------------------------ -->
                 <div v-if="loading" class="d-flex justify-content-center w-100">
@@ -62,6 +67,10 @@
                                     <div class="d-flex align-items-center" v-if="user.id == game.admin.id && !game.fulltime">
                                         <button class="btn btn-sm btn-primary" @click="changeTeam(player, 'A')">A</button>
                                         <button class="btn btn-sm btn-danger" @click="changeTeam(player, 'B')">B</button>
+                                    </div>
+
+                                    <div v-else class="d-flex align-items-center">
+                                        <button v-if="ratedPlayers ? !ratedPlayers.find(user => user.id == player.id) : ''" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal" @click="setRatingPlayer(player)">Rate</button>
                                     </div>
                                 </td>
                             </tr>
@@ -133,6 +142,10 @@
                                         <button class="btn btn-sm btn-primary" @click="changeTeam(player, 'A')">A</button>
                                         <button class="btn btn-sm btn-danger" @click="changeTeam(player, 'B')">B</button>
                                     </div>
+
+                                    <div v-else class="d-flex align-items-center">
+                                        <button v-if="ratedPlayers ? !ratedPlayers.find(user => user.id == player.id) : ''" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal" @click="setRatingPlayer(player)">Rate</button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -143,25 +156,77 @@
                     <!-- <button v-if="!game.players.find(player => player.id == user.id)" @click="joinGame">Join</button> -->
                     <button v-if="paid == false" class="btn btn-success mb-2" @click="payGame">Pay</button>
                     <div v-if="!game.fulltime">
-                        <label class="border p-2 rounded text-white bg-primary" v-if="game.players ? game.players.length >= game.totalPlayers : ''">Game is full</label>
-                        <!-- <button v-else-if="game.players ? !game.players.find(player => player.id == user.id) : ''" @click="joinGame" class="btn btn-success">Join</button> -->
-                        <div v-else class="mt-2">
-                            <button v-if="game.players ? !game.players.find(player => player.id == user.id) : ''" @click="joinGame" class="btn btn-success">Join</button>
-                            <button v-else @click="leaveGame" class="btn btn-warning">Leave</button>
+                        <label class="border p-2 rounded text-white bg-secondary" v-if="game.players ? game.players.length >= game.totalPlayers : ''">Game is full</label>
+                        
+                        <div class="mt-2">
+                            <button v-if="game.players ? !game.players.find(player => player.id == user.id) && game.players.length < game.totalPlayers : ''" @click="joinGame" class="btn btn-success">Join</button>
+                            <button v-if="game.players ? game.players.find(player => player.id == user.id) : ''" @click="leaveGame" class="btn btn-warning">Leave</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+<!-- ------------------------------------------------------------------------------------------------------------------------------ -->
+            <!-- modal for rating players -->
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Rating {{ ratingPlayer ? ratingPlayer.username : '' }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="atk" class="form-label">Attack</label>
+                                <select v-model="ratings.attack" class="form-control" id="atk">
+                                    <option v-for="n in 10" >{{ n }}</option>
+                                </select>
+                            </div>
+        
+                            <div class="mb-3">
+                                <label for="def" class="form-label">Defence</label>
+                                <select v-model="ratings.defence" class="form-control" id="def">
+                                    <option v-for="n in 10" >{{ n }}</option>
+                                </select>
+                            </div>
+        
+                            <div class="mb-3">
+                                <label for="str" class="form-label">Strength</label>
+                                <select v-model="ratings.strength" class="form-control" id="str">
+                                    <option v-for="n in 10" >{{ n }}</option>
+                                </select>
+                            </div>
+        
+                            <div class="mb-3">
+                                <label for="spd" class="form-label">Speed</label>
+                                <select v-model="ratings.speed" class="form-control" id="spd">
+                                    <option v-for="n in 10" >{{ n }}</option>
+                                </select>
+                            </div>
+        
+                            <div class="mb-3">
+                                <label for="teq" class="form-label">Technique</label>
+                                <select v-model="ratings.technique" class="form-control" id="teq">
+                                    <option v-for="n in 10" >{{ n }}</option>
+                                </select>
+                            </div>
+                        </div>
+        
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-success" data-bs-dismiss="modal" @click="ratePlayer">Rate</button>
                         </div>
                     </div>
                 </div>
             </div>
     </div>
+
 </template>
 
 <script>
 export default {
-    // props: {
-    //     x: {
-    //         type: Object,
-    //         // required: true
-    //     }
+    // components: {
+    //     RatePlayer
     // },
     computed: {
         id() {
@@ -173,7 +238,17 @@ export default {
             user: '',
             game: [],
             paid: null,
-            loading: false
+            loading: false,
+            ratedPlayers: null,
+            ratingPlayer: null,
+            ratings: {
+                attack: null,
+                defence: null,
+                strength: null,
+                speed: null,
+                technique: null,
+            },
+            error: ''
         }
     },
     async mounted() {
@@ -185,7 +260,14 @@ export default {
         this.user = data.user
         this.game = data.game
         this.paid = data.paid
-        // console.log(user)
+
+        if (this.game.fulltime) {
+            const response2 = await fetch(`http://localhost:8000/ratings/${this.id}`, {
+                credentials: 'include'
+            })
+            const data = await response2.json()
+            this.ratedPlayers = data.ratedPlayers
+        }
     },
     methods: {
         async joinGame() {
@@ -270,6 +352,49 @@ export default {
                 this.game = data.game
             }
             this.loading = false
+        },
+        async fulltime() {
+            if (confirm("Are you sure you want to call fulltime? This is irreversible.")) {
+                const response = await fetch(`http://localhost:8000/game/${this.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        'fulltime' : true
+                    }) 
+                })
+                const data = await response.json()
+                if (response.ok) {
+                    this.game = data.game
+                }
+            }
+        },
+        async setRatingPlayer(currentPlayer) {
+            this.ratingPlayer = currentPlayer
+        },
+        async ratePlayer() {
+            const response = await fetch(`http://localhost:8000/ratings/${this.id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    'ratings' : this.ratings,
+                    'player': this.ratingPlayer.id
+                })
+            })
+
+            const data = await response.json()
+            if (response.ok) {
+                this.game = data.game
+                this.ratedPlayers = data.ratedPlayers
+            }
+            else {
+                this.error = data.error
+            }
         }
     }
 }

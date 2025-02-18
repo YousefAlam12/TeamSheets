@@ -17,7 +17,7 @@ from pymoo.optimize import minimize
 from pymoo.operators.mutation.pm import PM
 ##########################################################
 
-from .models import User, Game, Player
+from .models import User, Game, Player, Rating
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
@@ -101,6 +101,9 @@ def balanceTeams(request, game_id):
     # removing duplicate solutions to allow different teams to be given on second call
     best_solutions = []
     [best_solutions.append(s) for s in valid_solutions if s not in best_solutions]
+    if len(best_solutions) <= 0:
+        return JsonResponse({'error': 'error'}, status=400)
+    
     best_solution = random.choice(best_solutions)
 
     teamA = []
@@ -259,7 +262,7 @@ def my_games_api(request):
         games = Game.objects.filter(admin=request.user).order_by('-date')
         admin_games = [game.as_dict() for game in games]
 
-        games = Game.objects.filter(players=request.user, date__lt=today).order_by('-date')
+        games = Game.objects.filter(fulltime=True, players=request.user).order_by('-date')
         played_games = [game.as_dict() for game in games]
 
         return JsonResponse({'myGames': myGames,
@@ -329,7 +332,8 @@ def game_api(request, game_id):
     if request.method == 'GET':
         return JsonResponse({'user': request.user.as_dict(),
                             'paid': paid,
-                             'game': game.as_dict()})
+                            'game': game.as_dict(),
+                            })
 
     # user joins game
     if request.method == 'POST':
@@ -361,6 +365,10 @@ def game_api(request, game_id):
         if PUT.get('paid'):
             player.paid = True
             player.save()
+        
+        if PUT.get('fulltime'):
+            game.fulltime = True
+            game.save()
 
     # sends the game and pay status as dict to update the page
     return JsonResponse({'game': game.as_dict(),
@@ -388,14 +396,41 @@ def teams_api(request, game_id):
 
         return JsonResponse({'game': game.as_dict()})
 
-# @login_required
-# def balanceTeams(request, game_id):
-#     players = Player.objects.filter(game=game_id).select_related('user')
 
-#     for i in range(len(players)):
-#         print(players[i].user.username)
-#         print(players[i].user.stats)
-#         print(players[i].team, '\n')
-#         # break
+@login_required
+def ratings_api(request, game_id):
+    game = Game.objects.get(id=game_id)
 
-#     return JsonResponse({'balance team end point' : 'hi !!!!!!!'})
+    if request.method == 'POST':
+        POST = json.loads(request.body)
+        playerRated = User.objects.get(id=POST['player'])
+        POST = POST['ratings']
+
+        try:
+            attack = float(POST['attack'])
+            defence = float(POST['defence'])
+            strength = float(POST['strength'])
+            speed = float(POST['speed'])
+            technique = float(POST['technique'])
+        except:
+            return JsonResponse({'error': 'Must rate all attributes.'}, status=400)
+
+        # If validation passes, create the rating
+        rating = Rating(
+            rater=request.user,
+            ratee=playerRated,
+            game=game,
+            attack=attack,
+            defence=defence,
+            strength=strength,
+            speed=speed,
+            technique=technique
+        )
+        rating.save()
+    
+    ratedPlayers = Rating.objects.filter(rater=request.user, game=game_id)
+    rated_players = [rating.ratee.as_dict() for rating in ratedPlayers]
+    rated_players.append(request.user.as_dict())
+    
+    return JsonResponse({'game' : game.as_dict(),
+                        'ratedPlayers' : rated_players})

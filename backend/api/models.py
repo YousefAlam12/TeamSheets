@@ -41,7 +41,7 @@ class User(AbstractUser):
             stats['technique'] += r.technique
         
         for s in stats:
-            stats[s] /= len(ratings)
+            stats[s] = round(stats[s] / len(ratings), 1)
         
         return stats
 
