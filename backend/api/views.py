@@ -151,7 +151,11 @@ def test_api_view(request):
     #     'games': games
     # })
 
-    print(request.user.stats)
+    # print(request.user.stats)
+    ratedPlayers = Rating.objects.filter(rater=request.user, game=4)
+    print(ratedPlayers)
+    # if (ratedPlayers.filter(ratee=8) > 0):
+    print(ratedPlayers.filter(rater=request.user, attack=9))
     return JsonResponse({
         'user': request.user.as_dict(),
         # 'stats': request.user.stats
@@ -400,12 +404,14 @@ def teams_api(request, game_id):
 @login_required
 def ratings_api(request, game_id):
     game = Game.objects.get(id=game_id)
+    ratedPlayers = Rating.objects.filter(rater=request.user, game=game_id)
 
     if request.method == 'POST':
         POST = json.loads(request.body)
         playerRated = User.objects.get(id=POST['player'])
         POST = POST['ratings']
 
+        # Validation checks
         try:
             attack = float(POST['attack'])
             defence = float(POST['defence'])
@@ -415,7 +421,10 @@ def ratings_api(request, game_id):
         except:
             return JsonResponse({'error': 'Must rate all attributes.'}, status=400)
 
-        # If validation passes, create the rating
+        if (ratedPlayers.filter(ratee=playerRated)):
+            return JsonResponse({'error' : 'Already rated this player'}, status=400)
+
+        # Create rating if checks pass
         rating = Rating(
             rater=request.user,
             ratee=playerRated,
@@ -428,7 +437,6 @@ def ratings_api(request, game_id):
         )
         rating.save()
     
-    ratedPlayers = Rating.objects.filter(rater=request.user, game=game_id)
     rated_players = [rating.ratee.as_dict() for rating in ratedPlayers]
     rated_players.append(request.user.as_dict())
     
