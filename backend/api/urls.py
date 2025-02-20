@@ -27,6 +27,7 @@ urlpatterns = [
     path('logout', views.logout_api, name="Logout"),
     path('signup', views.signup, name="Signup"),
     path('isAuthenticated', views.isAuthenticated, name="isAuthenticated"),
+    path('send_friend_request', views.send_friend_request, name="Send Friend Request"),
 
     path('allGames', views.all_games_api, name="All Games"),
     path('myGames', views.my_games_api, name="My Games"),

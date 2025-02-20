@@ -17,16 +17,18 @@ from pymoo.optimize import minimize
 from pymoo.operators.mutation.pm import PM
 ##########################################################
 
-from .models import User, Game, Player, Rating
+from .models import User, Game, Player, Rating, FriendRequest
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
 import json
 
 ###############################################################################################
-# Helper class for team balancing 
+# Helper class for team balancing
 
 # NSGA-II problem for team balancing
+
+
 class TeamBalancingProblem(Problem):
     def __init__(self, players):
         self.players = players
@@ -47,16 +49,17 @@ class TeamBalancingProblem(Problem):
         for solution in x:
             team_stats = {team: {"attack": 0, "defence": 0, 'skill': 0}
                           for team in range(2)}
-                          
+
             # Assign players to teams
             for i, x in enumerate(solution):
                 player = self.players[i]
                 team = round(x)
-                
+
                 if player.user.stats != None:
                     team_stats[team]["attack"] += player.user.stats["attack"]
                     team_stats[team]["defence"] += player.user.stats["defence"]
-                    team_stats[team]["skill"] += (player.user.stats["strength"] + player.user.stats["speed"] + player.user.stats["technique"])/3
+                    team_stats[team]["skill"] += (player.user.stats["strength"] +
+                                                  player.user.stats["speed"] + player.user.stats["technique"])/3
                 else:
                     # if player is new stats will just be set to 5 by default
                     team_stats[team]["attack"] += 5
@@ -64,12 +67,13 @@ class TeamBalancingProblem(Problem):
                     team_stats[team]["skill"] += 5
 
             # Calculate balances (minimize differences between teams)
-            attack_diff = abs((team_stats[0]['attack'] + team_stats[0]['skill']) - (team_stats[1]['attack'] + team_stats[1]['skill']))
-            defence_diff = abs((team_stats[0]['defence'] + team_stats[0]['skill']) - (team_stats[1]['defence'] + team_stats[1]['skill']))
+            attack_diff = abs((team_stats[0]['attack'] + team_stats[0]['skill']) - (
+                team_stats[1]['attack'] + team_stats[1]['skill']))
+            defence_diff = abs((team_stats[0]['defence'] + team_stats[0]['skill']) - (
+                team_stats[1]['defence'] + team_stats[1]['skill']))
 
             attack_balance.append(attack_diff)
             defence_balance.append(defence_diff)
-
 
         # Assign objectives to minimize
         out["F"] = np.column_stack([attack_balance, defence_balance])
@@ -80,7 +84,7 @@ class TeamBalancingProblem(Problem):
 def balanceTeams(request, game_id):
     players = Player.objects.filter(game=game_id).select_related('user')
 
-    # try find sweet spot for different size game and change params 
+    # try find sweet spot for different size game and change params
 
     # creating and solving the balancing problem using nsga-ii
     problem = TeamBalancingProblem(players)
@@ -100,10 +104,11 @@ def balanceTeams(request, game_id):
 
     # removing duplicate solutions to allow different teams to be given on second call
     best_solutions = []
-    [best_solutions.append(s) for s in valid_solutions if s not in best_solutions]
+    [best_solutions.append(s)
+     for s in valid_solutions if s not in best_solutions]
     if len(best_solutions) <= 0:
         return JsonResponse({'error': 'error'}, status=400)
-    
+
     best_solution = random.choice(best_solutions)
 
     teamA = []
@@ -152,14 +157,12 @@ def test_api_view(request):
     # })
 
     # print(request.user.stats)
-    ratedPlayers = Rating.objects.filter(rater=request.user, game=4)
-    print(ratedPlayers)
-    # if (ratedPlayers.filter(ratee=8) > 0):
-    print(ratedPlayers.filter(rater=request.user, attack=9))
+    x = Game.objects.get(id=4)
     return JsonResponse({
         'user': request.user.as_dict(),
+        'game': x.as_dict()
         # 'stats': request.user.stats
-    }) 
+    })
 
 
 def isAuthenticated(request):
@@ -245,6 +248,21 @@ def signup(request):
 
 
 @login_required
+def send_friend_request(request):
+    if request.method == 'POST':
+        POST = json.loads(request.body)
+        from_user = request.user
+        to_user = User.objects.get(id=POST['to_user'])
+        print(to_user)
+        friend_request, created = FriendRequest.objects.get_or_create(
+            from_user=from_user, to_user=to_user)
+        if created:
+            return JsonResponse({'user': request.user.as_dict()})
+        else:
+            return JsonResponse({'error': 'user does not exist'}, status=400)
+
+
+@login_required
 # returns all games in db
 def all_games_api(request):
     if request.method == 'GET':
@@ -260,13 +278,15 @@ def my_games_api(request):
     if request.method == 'GET':
         today = datetime.datetime.today().date()
 
-        games = Game.objects.filter(fulltime=False, players=request.user, date__gte=today).order_by('date')
+        games = Game.objects.filter(
+            fulltime=False, players=request.user, date__gte=today).order_by('date')
         myGames = [game.as_dict() for game in games]
 
         games = Game.objects.filter(admin=request.user).order_by('-date')
         admin_games = [game.as_dict() for game in games]
 
-        games = Game.objects.filter(fulltime=True, players=request.user).order_by('-date')
+        games = Game.objects.filter(
+            fulltime=True, players=request.user).order_by('-date')
         played_games = [game.as_dict() for game in games]
 
         return JsonResponse({'myGames': myGames,
@@ -283,7 +303,8 @@ def games_api(request):
         print(POST)
 
         # check if necessary fields are filled
-        required_fields = ['name', 'date', 'start_time', 'end_time', 'totalPlayers', 'price', 'address', 'postcode', 'longitude', 'latitude']
+        required_fields = ['name', 'date', 'start_time', 'end_time',
+                           'totalPlayers', 'price', 'address', 'postcode', 'longitude', 'latitude']
 
         for field in required_fields:
             if not POST.get(field):
@@ -315,7 +336,8 @@ def games_api(request):
     today = datetime.datetime.today().date()
     # games = Game.objects.filter(fulltime=False, date__gte=today).order_by('date')
     # orders games by distance from user
-    games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(fulltime=False, date__gte=today).order_by('distance', 'date')
+    games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(
+        fulltime=False, date__gte=today).order_by('distance', 'date')
     data = [game.as_dict() for game in games]
     return JsonResponse({'games': data})
 
@@ -336,8 +358,8 @@ def game_api(request, game_id):
     if request.method == 'GET':
         return JsonResponse({'user': request.user.as_dict(),
                             'paid': paid,
-                            'game': game.as_dict(),
-                            })
+                             'game': game.as_dict(),
+                             })
 
     # user joins game
     if request.method == 'POST':
@@ -369,7 +391,7 @@ def game_api(request, game_id):
         if PUT.get('paid'):
             player.paid = True
             player.save()
-        
+
         if PUT.get('fulltime'):
             game.fulltime = True
             game.save()
@@ -422,7 +444,7 @@ def ratings_api(request, game_id):
             return JsonResponse({'error': 'Must rate all attributes.'}, status=400)
 
         if (ratedPlayers.filter(ratee=playerRated)):
-            return JsonResponse({'error' : 'Already rated this player'}, status=400)
+            return JsonResponse({'error': 'Already rated this player'}, status=400)
 
         # Create rating if checks pass
         rating = Rating(
@@ -436,9 +458,9 @@ def ratings_api(request, game_id):
             technique=technique
         )
         rating.save()
-    
+
     rated_players = [rating.ratee.as_dict() for rating in ratedPlayers]
     rated_players.append(request.user.as_dict())
-    
-    return JsonResponse({'game' : game.as_dict(),
-                        'ratedPlayers' : rated_players})
+
+    return JsonResponse({'game': game.as_dict(),
+                        'ratedPlayers': rated_players})

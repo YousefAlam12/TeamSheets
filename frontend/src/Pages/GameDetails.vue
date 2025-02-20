@@ -48,8 +48,11 @@
                             <tr v-for="player in game.players">
                                 <td v-if="player.team == 'A'" class="d-flex justify-content-between">
                                     <div>
-                                        {{ player.username }} 
-                                        <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                        <div class="d-flex">
+                                            <button class="nav-link player-inspect" @click="setSelectedPlayer(player)" data-bs-toggle="modal" data-bs-target="#PlayerModal">{{ player.username }}</button>
+                                            <PlayerInspect :player="selectedPlayer" :user="user" :isAdmin="user.id == game.admin.id" @sendFriendRequest="sendFriendRequest"/>
+                                            <button v-if="player.paid" class="btn btn-sm btn-success ms-1"><i class="bi bi-hand-thumbs-up"></i></button>
+                                        </div>
                                         <small class="form-text text-muted">
                                             <div v-if="player.stats" class="d-flex flex-row bd-highlight">
                                                 <div class="pe-2 bd-highlight">atk: {{ player.stats.attack }}</div>
@@ -70,7 +73,7 @@
                                     </div>
 
                                     <div v-else class="d-flex align-items-center">
-                                        <button v-if="ratedPlayers ? !ratedPlayers.find(user => user.id == player.id) : ''" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal" @click="setRatingPlayer(player)">Rate</button>
+                                        <button v-if="ratedPlayers ? !ratedPlayers.find(user => user.id == player.id) : ''" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal" @click="setSelectedPlayer(player)">Rate</button>
                                     </div>
                                 </td>
                             </tr>
@@ -87,8 +90,11 @@
                             <tr v-for="player in game.players">
                                 <td v-if="player.team == null" class="d-flex justify-content-between">
                                     <div>
-                                        {{ player.username }} 
-                                        <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                        <div class="d-flex">
+                                            <button class="nav-link player-inspect" @click="setSelectedPlayer(player)" data-bs-toggle="modal" data-bs-target="#PlayerModal">{{ player.username }}</button>
+                                            <PlayerInspect :player="selectedPlayer" :user="user" :isAdmin="user.id == game.admin.id" @sendFriendRequest="sendFriendRequest"/>
+                                            <button v-if="player.paid" class="btn btn-sm btn-success ms-1"><i class="bi bi-hand-thumbs-up"></i></button>
+                                        </div>
                                         <small class="form-text text-muted">
                                             <div v-if="player.stats" class="d-flex flex-row bd-highlight">
                                                 <div class="pe-2 bd-highlight">atk: {{ player.stats.attack }}</div>
@@ -122,8 +128,11 @@
                             <tr v-for="player in game.players">
                                 <td v-if="player.team == 'B'" class="d-flex justify-content-between">
                                     <div>
-                                        {{ player.username }} 
-                                        <button v-if="player.paid" class="btn btn-sm btn-success"><i class="bi bi-hand-thumbs-up"></i></button>
+                                        <div class="d-flex">
+                                            <button class="nav-link player-inspect" @click="setSelectedPlayer(player)" data-bs-toggle="modal" data-bs-target="#PlayerModal">{{ player.username }}</button>
+                                            <PlayerInspect :player="selectedPlayer" :user="user" :isAdmin="user.id == game.admin.id" @sendFriendRequest="sendFriendRequest"/>
+                                            <button v-if="player.paid" class="btn btn-sm btn-success ms-1"><i class="bi bi-hand-thumbs-up"></i></button>
+                                        </div>
                                         <small class="form-text text-muted">
                                             <div v-if="player.stats" class="d-flex flex-row bd-highlight">
                                                 <div class="pe-2 bd-highlight">atk: {{ player.stats.attack }}</div>
@@ -144,7 +153,7 @@
                                     </div>
 
                                     <div v-else class="d-flex align-items-center">
-                                        <button v-if="ratedPlayers ? !ratedPlayers.find(user => user.id == player.id) : ''" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal" @click="setRatingPlayer(player)">Rate</button>
+                                        <button v-if="ratedPlayers ? !ratedPlayers.find(user => user.id == player.id) : ''" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal" @click="setSelectedPlayer(player)">Rate</button>
                                     </div>
                                 </td>
                             </tr>
@@ -172,7 +181,7 @@
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Rating {{ ratingPlayer ? ratingPlayer.username : '' }}</h5>
+                            <h5 class="modal-title" id="exampleModalLabel">Rating {{ selectedPlayer ? selectedPlayer.username : '' }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
@@ -224,10 +233,12 @@
 </template>
 
 <script>
+import PlayerInspect from '../Components/PlayerInspect.vue';
+
 export default {
-    // components: {
-    //     RatePlayer
-    // },
+    components: {
+        PlayerInspect
+    },
     computed: {
         id() {
             return this.$route.params.id
@@ -240,7 +251,7 @@ export default {
             paid: null,
             loading: false,
             ratedPlayers: null,
-            ratingPlayer: null,
+            selectedPlayer: null,
             ratings: {
                 attack: null,
                 defence: null,
@@ -290,21 +301,23 @@ export default {
             }
         },
         async leaveGame() {
-            const response = await fetch(`http://localhost:8000/game/${this.id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    'leave' : true
-                }) 
-            })
-
-            const data = await response.json()
-            if (response.ok) {
-                this.game = data.game
-                this.paid = null
+            if (confirm('Are you sure you want to leave this game?')) {
+                const response = await fetch(`http://localhost:8000/game/${this.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        'leave' : true
+                    }) 
+                })
+    
+                const data = await response.json()
+                if (response.ok) {
+                    this.game = data.game
+                    this.paid = null
+                }
             }
         },
         async payGame() {
@@ -371,8 +384,8 @@ export default {
                 }
             }
         },
-        async setRatingPlayer(currentPlayer) {
-            this.ratingPlayer = currentPlayer
+        async setSelectedPlayer(currentPlayer) {
+            this.selectedPlayer = currentPlayer
         },
         async ratePlayer() {
             const response = await fetch(`http://localhost:8000/ratings/${this.id}`, {
@@ -383,7 +396,7 @@ export default {
                 credentials: 'include',
                 body: JSON.stringify({
                     'ratings' : this.ratings,
-                    'player': this.ratingPlayer.id
+                    'player': this.selectedPlayer.id
                 })
             })
 
@@ -395,7 +408,23 @@ export default {
             else {
                 this.error = data.error
             }
-        }
+        },
+        async sendFriendRequest(player) {
+            const response = await fetch(`http://localhost:8000/send_friend_request`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'to_user': player.id 
+                })
+            })
+            if (response.ok) {
+                const data = await response.json()
+                this.user = data.user
+            }
+        },
     }
 }
 </script>
@@ -405,5 +434,9 @@ export default {
     .teams {
         flex-direction: column;
     }
+}
+
+.player-inspect:hover {
+    color: #007bff; /* Change color on hover (e.g., Bootstrap primary color) */
 }
 </style>

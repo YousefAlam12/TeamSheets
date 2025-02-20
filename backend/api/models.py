@@ -10,12 +10,21 @@ class User(AbstractUser):
     date_of_birth = models.DateField()
     postcode = models.CharField(max_length=50)
     location = models.PointField()
+    friends = models.ManyToManyField("User", blank=True)
 
     def as_dict(self):
         return {
             'id': self.id,
             'username': self.username,
-            # 'stats': self.stats
+            'friends' : list(self.friends.values_list("username", flat=True)),
+            'sent_requests': [
+                {'id': to_user_id, 'username': to_user_username}
+                for to_user_id, to_user_username in self.from_user.all().values_list('to_user__id', 'to_user__username')
+            ],
+            'received_requests': [
+                {'id': from_user_id, 'username': from_user_username}
+                for from_user_id, from_user_username in self.to_user.all().values_list('from_user__id', 'from_user__username')
+            ],
         }
     
     @property
@@ -136,3 +145,11 @@ class Rating(models.Model):
 
     def __str__(self):
         return f"{self.rater} rated {self.ratee} for {self.game}"
+
+
+class FriendRequest(models.Model):
+    from_user = models.ForeignKey(User, related_name="from_user", on_delete=models.CASCADE)
+    to_user = models.ForeignKey(User, related_name="to_user", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.from_user} sent request to {self.to_user}"
