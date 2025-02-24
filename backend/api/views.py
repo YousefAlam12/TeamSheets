@@ -92,7 +92,8 @@ def balanceTeams(request, game_id):
     algorithm = NSGA2(pop_size=20, mutation=PM(prob=0.3))
 
     # result = minimize(problem, algorithm, termination=("n_gen", 100), verbose=False)
-    result = minimize(problem, algorithm, termination=("n_gen", 50), verbose=False)
+    result = minimize(problem, algorithm, termination=(
+        "n_gen", 50), verbose=False)
 
     # getting all soluitions where they have equal/fair amount of players
     valid_solutions = []
@@ -260,6 +261,35 @@ def send_friend_request(request):
             return JsonResponse({'user': request.user.as_dict()})
         else:
             return JsonResponse({'error': 'user does not exist'}, status=400)
+
+
+@login_required
+def friends_api(request):
+    userList = User.objects.all()
+    userList = [{'id': user.id, 'username': user.username} for user in userList]
+    userList = list(filter(lambda u: u.get('id') != request.user.id, userList))
+
+    if request.method != 'GET':
+        JSON = json.loads(request.body)
+        friend_request = FriendRequest.objects.get(
+            from_user=JSON['from_user'], to_user=request.user)
+
+        if request.method == 'POST':
+            if friend_request.to_user == request.user:
+                friend_request.to_user.friends.add(friend_request.from_user)
+                friend_request.from_user.friends.add(friend_request.to_user)
+                friend_request.delete()
+            else:
+                return JsonResponse({'error': 'user does not exist'}, status=400)
+
+        if request.method == 'DELETE':
+            if friend_request.to_user == request.user:
+                friend_request.delete()
+            else:
+                return JsonResponse({'error': 'user does not exist'}, status=400)
+
+    return JsonResponse({'user': request.user.as_dict(),
+                        'userList': userList})
 
 
 @login_required

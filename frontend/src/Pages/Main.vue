@@ -10,12 +10,13 @@
             </li>
             
             <li class="nav-item">
+                <button class="nav-link" :class="{ active: activeTab === 'adminGames' }" @click="setActiveTab('adminGames')">Admin Games</button>
+            </li>
+            
+            <li class="nav-item">
                 <button class="nav-link" :class="{ active: activeTab === 'playedGames' }" @click="setActiveTab('playedGames')">Played Games</button>
             </li>
 
-            <li class="nav-item">
-                <button class="nav-link" :class="{ active: activeTab === 'adminGames' }" @click="setActiveTab('adminGames')">Admin Games</button>
-            </li>
         </ul>
 
         <div class="tab-content mt-3">
@@ -28,7 +29,7 @@
         </div>
 
     </div>
-  </template>
+</template>
   
 <script>
 import DisplayGames from '../Components/DisplayGames.vue';

@@ -6,6 +6,7 @@ import Games from '../Pages/Games.vue'
 import Signup from '../Pages/Signup.vue'
 import Logout from '../Pages/Logout.vue'
 import GameDetails from '../Pages/GameDetails.vue'
+import FriendsList from '../Pages/FriendsList.vue'
 
 // let base = (import.meta.env.MODE == 'development') ? import.meta.env.BASE_URL : ''
 
@@ -18,6 +19,7 @@ const router = createRouter({
         {path: '/signup', name: 'Signup', component: Signup},
         {path: '/', name: 'Main', component: Main, meta: {auth: true}},
         {path: '/games', name: 'Games', component: Games, meta: {auth: true}},
+        {path: '/friendsList', name: 'FriendsList', component: FriendsList, meta: {auth: true}},
 
 
         {

@@ -5,6 +5,7 @@ from datetime import date, time
 
 # Create your models here.
 
+
 class User(AbstractUser):
     email = models.EmailField(unique=True, null=False)
     date_of_birth = models.DateField()
@@ -16,7 +17,11 @@ class User(AbstractUser):
         return {
             'id': self.id,
             'username': self.username,
-            'friends' : list(self.friends.values_list("username", flat=True)),
+            'stats': self.stats,
+            'friends': [
+                {'id': friend.id, 'username': friend.username, 'stats': friend.stats}
+                for friend in self.friends.all()
+            ],
             'sent_requests': [
                 {'id': to_user_id, 'username': to_user_username}
                 for to_user_id, to_user_username in self.from_user.all().values_list('to_user__id', 'to_user__username')
@@ -26,7 +31,7 @@ class User(AbstractUser):
                 for from_user_id, from_user_username in self.to_user.all().values_list('from_user__id', 'from_user__username')
             ],
         }
-    
+
     @property
     def stats(self):
         ratings = self.ratings.all()
@@ -40,7 +45,7 @@ class User(AbstractUser):
             'strength': 0,
             'speed': 0,
             'technique': 0
-            }
+        }
 
         for r in ratings:
             stats['attack'] += r.attack
@@ -48,10 +53,10 @@ class User(AbstractUser):
             stats['strength'] += r.strength
             stats['speed'] += r.speed
             stats['technique'] += r.technique
-        
+
         for s in stats:
             stats[s] = round(stats[s] / len(ratings), 1)
-        
+
         return stats
 
 
@@ -66,13 +71,13 @@ class Game(models.Model):
     address = models.CharField(max_length=100)
     postcode = models.CharField(max_length=50)
     location = models.PointField()
-    admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='admin_games')
+    admin = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='admin_games')
     players = models.ManyToManyField(User, through='Player')
     fulltime = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Game {self.id}"
-
 
     def as_dict(self):
         start_time = self.start_time.strftime('%H:%M')
@@ -123,7 +128,6 @@ class Player(models.Model):
     def __str__(self):
         return f"{self.user} playing in {self.game}"
 
-    
     def as_dict(self):
         return {
             'id': self.id,
@@ -134,8 +138,10 @@ class Player(models.Model):
 
 
 class Rating(models.Model):
-    rater = models.ForeignKey(User, related_name="players_rated", on_delete=models.CASCADE)
-    ratee = models.ForeignKey(User, related_name="ratings", on_delete=models.CASCADE)
+    rater = models.ForeignKey(
+        User, related_name="players_rated", on_delete=models.CASCADE)
+    ratee = models.ForeignKey(
+        User, related_name="ratings", on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     attack = models.FloatField()
     defence = models.FloatField()
@@ -148,8 +154,10 @@ class Rating(models.Model):
 
 
 class FriendRequest(models.Model):
-    from_user = models.ForeignKey(User, related_name="from_user", on_delete=models.CASCADE)
-    to_user = models.ForeignKey(User, related_name="to_user", on_delete=models.CASCADE)
+    from_user = models.ForeignKey(
+        User, related_name="from_user", on_delete=models.CASCADE)
+    to_user = models.ForeignKey(
+        User, related_name="to_user", on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.from_user} sent request to {self.to_user}"

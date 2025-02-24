@@ -15,6 +15,10 @@
                             Home
                         </router-link>
 
+                        <router-link class="nav-link" exact-active-class="active" :to="{ name: 'FriendsList' }">
+                            Friends List
+                        </router-link>
+
                         <router-link class="nav-link" exact-active-class="active" :to="{ name: 'Games' }">
                             Games
                         </router-link>
