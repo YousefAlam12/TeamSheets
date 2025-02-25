@@ -78,7 +78,7 @@
                                         <label
                                             v-else-if="user.received_requests.some(request => request.id === u.id)"
                                             class="btn btn-warning">Received</label>
-                                        <button v-else type="button" class="btn btn-success" data-bs-dismiss="modal"
+                                        <button v-else type="button" class="btn btn-success"
                                             @click="sendFriendRequest(u)">Send</button>
                                     </div>
                                 </li>
@@ -97,6 +97,8 @@
 </template>
 
 <script>
+import { store } from '../store.js';
+
 export default {
     data() {
         return {
@@ -118,8 +120,8 @@ export default {
             credentials: 'include'
         })
         const data = await response.json()
-        console.log(data)
-        this.user = data.user
+        // this.user = data.user
+        this.user = store.user
         this.userList = data.userList
     },
     methods: {
@@ -135,7 +137,8 @@ export default {
             })
             if (response.ok) {
                 const data = await response.json()
-                this.user = data.user
+                // this.user = data.user
+                Object.assign(store.user, data.user)
             }
         },
         // send friend request to a user in the userlist
@@ -152,7 +155,9 @@ export default {
             })
             if (response.ok) {
                 const data = await response.json()
-                this.user = data.user
+                // this.user = data.user
+                // store.user = data.user
+                Object.assign(store.user, data.user)
             }
         },
     }

@@ -249,6 +249,14 @@ def signup(request):
 
 
 @login_required
+def user_api(request):
+    if request.user:
+        return JsonResponse({'user': request.user.as_dict()})
+    else:
+        return JsonResponse({'error': 'not authenticated'})
+
+
+@login_required
 def send_friend_request(request):
     if request.method == 'POST':
         POST = json.loads(request.body)
@@ -288,8 +296,9 @@ def friends_api(request):
             else:
                 return JsonResponse({'error': 'user does not exist'}, status=400)
 
-    return JsonResponse({'user': request.user.as_dict(),
-                        'userList': userList})
+    return JsonResponse({'userList': userList,
+                        # 'user': request.user.as_dict()
+                        })
 
 
 @login_required
@@ -386,7 +395,7 @@ def game_api(request, game_id):
         paid = None
 
     if request.method == 'GET':
-        return JsonResponse({'user': request.user.as_dict(),
+        return JsonResponse({
                             'paid': paid,
                              'game': game.as_dict(),
                              })

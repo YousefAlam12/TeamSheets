@@ -72,6 +72,8 @@
 </template>
 
 <script>
+import { store } from './store.js';
+
 export default {
     data() {
         return {
@@ -84,9 +86,30 @@ export default {
             return this.$route.name == 'Login' || this.$route.name == 'Signup'
         }
     },
+    watch: {
+        hideNavbar(newValue) {
+            if (!newValue) {
+                this.getUser()
+            }
+        }
+    },
+    async mounted() {
+        if (!this.hideNavbar) {
+            this.getUser()
+        }
+    },
     methods: {
         toggleNavbar() {
             this.isExpanded = !this.isExpanded
+        },
+        async getUser() {
+            const response = await fetch('http://localhost:8000/user', {
+            credentials: 'include'
+            })
+            const data = await response.json()
+            // this.$store.user = data.user
+            store.user = data.user
+
         }
     }
 }

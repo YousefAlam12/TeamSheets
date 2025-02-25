@@ -9,5 +9,7 @@ import "bootstrap";
 
 const app = createApp(App)
 
+app.config.globalProperties.$store = {user: null}
+
 app.use(router)
 app.mount('#app')
