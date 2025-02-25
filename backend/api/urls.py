@@ -37,5 +37,6 @@ urlpatterns = [
     path('game/<int:game_id>', views.game_api, name="Game_api"),
     path('teams/<int:game_id>', views.teams_api, name="Teams"),
     path('balanceTeams/<int:game_id>', views.balanceTeams, name="Balance Teams"),
-    path('ratings/<int:game_id>', views.ratings_api, name="Ratings")
+    path('ratings/<int:game_id>', views.ratings_api, name="Ratings"),
+    path('gameInvite/<int:game_id>', views.gameInvite, name="Game Invite"),
 ]

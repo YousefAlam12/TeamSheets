@@ -1,5 +1,5 @@
 <template>
-    <div v-if="user" class="container pt-3">
+    <div v-if="user && user.received_requests" class="container pt-3">
         <div class="h1 text-center border rounded bg-light p-2 mb-3">
             Friends List
         </div>
@@ -135,10 +135,11 @@ export default {
                 credentials: 'include',
                 body: JSON.stringify({ 'from_user': requestUser.id })
             })
+            const data = await response.json()
             if (response.ok) {
-                const data = await response.json()
                 // this.user = data.user
                 Object.assign(store.user, data.user)
+                store.user.received_requests = store.user.received_requests.filter(req => req.id !== requestUser.id);
             }
         },
         // send friend request to a user in the userlist
@@ -153,8 +154,8 @@ export default {
                     'to_user': user.id
                 })
             })
+            const data = await response.json()
             if (response.ok) {
-                const data = await response.json()
                 // this.user = data.user
                 // store.user = data.user
                 Object.assign(store.user, data.user)

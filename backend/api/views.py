@@ -17,7 +17,7 @@ from pymoo.optimize import minimize
 from pymoo.operators.mutation.pm import PM
 ##########################################################
 
-from .models import User, Game, Player, Rating, FriendRequest
+from .models import User, Game, Player, Rating, FriendRequest, GameInvite
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
@@ -77,7 +77,6 @@ class TeamBalancingProblem(Problem):
 
         # Assign objectives to minimize
         out["F"] = np.column_stack([attack_balance, defence_balance])
-###############################################################################################
 
 
 @login_required
@@ -133,6 +132,8 @@ def balanceTeams(request, game_id):
 
     game = Game.objects.get(id=game_id)
     return JsonResponse({'game': game.as_dict()})
+
+###############################################################################################
 
 
 def test_api_view(request):
@@ -328,9 +329,13 @@ def my_games_api(request):
             fulltime=True, players=request.user).order_by('-date')
         played_games = [game.as_dict() for game in games]
 
+        inbox = request.user.invite_to.all()
+        inbox = [notif.as_dict() for notif in inbox]
+
         return JsonResponse({'myGames': myGames,
                              'adminGames': admin_games,
-                             'playedGames': played_games})
+                             'playedGames': played_games,
+                             'inbox': inbox})
 
 
 @login_required
@@ -503,3 +508,17 @@ def ratings_api(request, game_id):
 
     return JsonResponse({'game': game.as_dict(),
                         'ratedPlayers': rated_players})
+
+
+@login_required
+def gameInvite(request, game_id):
+    game = Game.objects.get(id=game_id)
+
+    if request.method == 'POST':
+        POST = json.loads(request.body)
+        to_user = User.objects.get(id=POST['to_user'])
+
+        game_invite, created = GameInvite.objects.get_or_create(
+            from_user=request.user, to_user=to_user, game=game)
+        return JsonResponse({'success': 'user has been invited'})
+

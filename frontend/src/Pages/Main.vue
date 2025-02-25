@@ -55,6 +55,7 @@ export default {
         this.myGames = data.myGames
         this.adminGames = data.adminGames
         this.playedGames = data.playedGames
+        console.log(data)
     },
     methods: {
         setActiveTab(tab) {

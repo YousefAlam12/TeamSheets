@@ -83,7 +83,11 @@
                     <table class="table table-light">
                         <thead>
                             <tr class="text-center">
-                                <th>Players</th>
+                                <th>
+                                    Players
+                                    <!-- <button class="btn btn-sm btn-success"><i class="bi bi-plus-circle-fill"></i></button> -->
+                                    <InvitePlayer :user="user" :game="game"/>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -234,11 +238,12 @@
 
 <script>
 import PlayerInspect from '../Components/PlayerInspect.vue';
+import InvitePlayer from '../Components/InvitePlayer.vue';
 import { store } from '../store.js';
 
 export default {
     components: {
-        PlayerInspect
+        PlayerInspect, InvitePlayer
     },
     computed: {
         id() {

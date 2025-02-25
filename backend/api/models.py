@@ -161,3 +161,19 @@ class FriendRequest(models.Model):
 
     def __str__(self):
         return f"{self.from_user} sent request to {self.to_user}"
+
+
+class GameInvite(models.Model):
+    from_user = models.ForeignKey(User, related_name="invite_from", on_delete=models.CASCADE)
+    to_user = models.ForeignKey(User, related_name="invite_to", on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+
+    def as_dict(self):
+        return {
+            'from_user': self.from_user.username,
+            'game_id': self.game.id,
+            'game_name': self.game.name,
+        }
+
+    def __str__(self):
+        return f"{self.from_user} invited {self.to_user} to {self.game}"

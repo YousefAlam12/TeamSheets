@@ -1,21 +1,25 @@
 <template>
     <main class="container pt-4">
-        <nav v-if="!hideNavbar" class="navbar navbar-expand-lg navbar-light bg-light rounded" :class="{'expanded-navbar': isExpanded}">
+        <nav v-if="!hideNavbar" class="navbar navbar-expand-lg navbar-light bg-light rounded"
+            :class="{ 'expanded-navbar': isExpanded }">
             <div class="container-fluid">
-        <!-- Navbar toggle button for mobile -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" :aria-expanded="isExpanded.toString()" aria-label="Toggle navigation" @click="toggleNavbar">
+                <!-- Navbar toggle button for mobile -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" :aria-expanded="isExpanded.toString()" aria-label="Toggle navigation"
+                    @click="toggleNavbar">
                     <span class="navbar-toggler-icon"></span>
-        </button>
+                </button>
 
-        <!-- Navbar links that collapse on smaller screens -->
-        <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Navbar links that collapse on smaller screens -->
+                <div class="collapse navbar-collapse" id="navbarNav">
                     <div class="navbar-nav">
                         <router-link class="nav-link" exact-active-class="active" :to="{ name: 'Main' }">
                             Home
                         </router-link>
 
-                        <router-link class="nav-link" exact-active-class="active" :to="{ name: 'FriendsList' }">
+                        <router-link
+                            :class="{ 'nav-link': true, 'text-warning': store.user.received_requests ? store.user.received_requests.length > 0 : '' }"
+                            exact-active-class="active" :to="{ name: 'FriendsList' }">
                             Friends List
                         </router-link>
 
@@ -84,6 +88,9 @@ export default {
     computed: {
         hideNavbar() {
             return this.$route.name == 'Login' || this.$route.name == 'Signup'
+        },
+        store() {
+            return store
         }
     },
     watch: {
@@ -104,7 +111,7 @@ export default {
         },
         async getUser() {
             const response = await fetch('http://localhost:8000/user', {
-            credentials: 'include'
+                credentials: 'include'
             })
             const data = await response.json()
             // this.$store.user = data.user
@@ -126,25 +133,25 @@ export default {
     }
 }
 
-    .mr-auto {
-            margin-right: auto !important
-        }
+.mr-auto {
+    margin-right: auto !important
+}
 
-    .form-inline {
-        display: -webkit-box;
-        display: -ms-flexbox;
-        display: flex;
-        -webkit-box-orient: horizontal;
-        -webkit-box-direction: normal;
-        -ms-flex-flow: row wrap;
-        flex-flow: row wrap;
-        -webkit-box-align: center;
-        -ms-flex-align: center;
-        align-items: center;
-        }
+.form-inline {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -ms-flex-flow: row wrap;
+    flex-flow: row wrap;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
 
-    .nav-link.active {
-        font-weight: bold;
-        border-bottom: solid blue;
-    }
+.nav-link.active {
+    font-weight: bold;
+    border-bottom: solid blue;
+}
 </style>
