@@ -1,5 +1,5 @@
 <template>
-    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#gameInviteModal"><i
+    <button v-if="!game.fulltime" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#gameInviteModal"><i
             class="bi bi-plus-circle-fill"></i></button>
 
     <!-- Sending Game Invite Modal -->

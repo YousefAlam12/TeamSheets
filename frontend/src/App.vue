@@ -18,7 +18,7 @@
                         </router-link>
 
                         <router-link
-                            :class="{ 'nav-link': true, 'text-warning': store.user.received_requests ? store.user.received_requests.length > 0 : '' }"
+                            :class="{ 'nav-link': true, 'text-warning': store.user.received_requests != null && store.user.received_requests.length > 0}"
                             exact-active-class="active" :to="{ name: 'FriendsList' }">
                             Friends List
                         </router-link>
@@ -76,22 +76,21 @@
 </template>
 
 <script>
-import { store } from './store.js';
+import { useUserStore } from "./stores/user";
 
 export default {
     data() {
         return {
             response_data: '',
             isExpanded: false,
+            store: useUserStore(),
         }
     },
     computed: {
         hideNavbar() {
             return this.$route.name == 'Login' || this.$route.name == 'Signup'
         },
-        store() {
-            return store
-        }
+
     },
     watch: {
         hideNavbar(newValue) {
@@ -114,9 +113,9 @@ export default {
                 credentials: 'include'
             })
             const data = await response.json()
-            // this.$store.user = data.user
-            store.user = data.user
-
+            const store = useUserStore()
+            store.saveUser(data.user)
+            console.log('app store: ', store.user)
         }
     }
 }

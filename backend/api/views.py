@@ -298,7 +298,7 @@ def friends_api(request):
                 return JsonResponse({'error': 'user does not exist'}, status=400)
 
     return JsonResponse({'userList': userList,
-                        # 'user': request.user.as_dict()
+                        'user': request.user.as_dict()
                         })
 
 

@@ -4,6 +4,8 @@
             Home
         </div>
 
+        <p v-if="user">{{ user.game_invites.length > 0 ? user.game_invites : '' }}</p>
+
         <ul class="nav nav-tabs">
             <li class="nav-item">
                 <button class="nav-link" :class="{ active: activeTab === 'myGames' }" @click="setActiveTab('myGames')">My Games</button>
@@ -33,7 +35,7 @@
   
 <script>
 import DisplayGames from '../Components/DisplayGames.vue';
-import { store } from '../store.js';
+import { useUserStore } from '../stores/user';
 
 export default {
     components: {
@@ -56,8 +58,7 @@ export default {
         this.myGames = data.myGames
         this.adminGames = data.adminGames
         this.playedGames = data.playedGames
-        // console.log(data)
-        this.user = store.user
+        this.user = useUserStore().user
         console.log(this.user)
     },
     methods: {

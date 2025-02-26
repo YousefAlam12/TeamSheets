@@ -98,14 +98,14 @@
 </template>
 
 <script>
-import { store } from '../store.js';
+import { useUserStore } from '../stores/user.js';
 
 export default {
     data() {
         return {
             user: null,
             userList: null,
-            userSearch: ''
+            userSearch: '',
         }
     },
     computed: {
@@ -121,9 +121,9 @@ export default {
             credentials: 'include'
         })
         const data = await response.json()
-        // this.user = data.user
-        this.user = store.user
         this.userList = data.userList
+        useUserStore().saveUser(data.user)
+        this.user = useUserStore().user
     },
     methods: {
         // accepts request and adds user to friends
@@ -138,13 +138,8 @@ export default {
             })
             const data = await response.json()
             if (response.ok) {
-                // this.user = data.user
-                Object.assign(store.user, data.user)
-                store.user.received_requests = store.user.received_requests.filter(req => req.id !== requestUser.id);
-                if (accept) {
-                    store.user.friends.push(requestUser)
-                    store.user.friends.sort((a, b) => a.id - b.id)
-                }
+                useUserStore().saveUser(data.user)
+                this.user = useUserStore().user
             }
         },
         // send friend request to a user in the userlist
@@ -161,9 +156,8 @@ export default {
             })
             const data = await response.json()
             if (response.ok) {
-                // this.user = data.user
-                // store.user = data.user
-                Object.assign(store.user, data.user)
+                useUserStore().saveUser(data.user)
+                this.user = useUserStore().user
             }
         },
     }

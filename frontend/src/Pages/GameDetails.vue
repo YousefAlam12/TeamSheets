@@ -239,7 +239,7 @@
 <script>
 import PlayerInspect from '../Components/PlayerInspect.vue';
 import InvitePlayer from '../Components/InvitePlayer.vue';
-import { store } from '../store.js';
+import { useUserStore } from '../stores/user.js';
 
 export default {
     components: {
@@ -275,7 +275,8 @@ export default {
         const data = await response.json()
         console.log(data)
         // this.user = data.user
-        this.user = store.user
+        // this.user = store.user
+        this.user = useUserStore().user
         this.game = data.game
         this.paid = data.paid
 
@@ -429,8 +430,8 @@ export default {
             })
             if (response.ok) {
                 const data = await response.json()
-                // this.user = data.user
-                Object.assign(store.user, data.user)
+                useUserStore().saveUser(data.user)
+                this.user = useUserStore().user
             }
         },
         async kickPlayer(player) {

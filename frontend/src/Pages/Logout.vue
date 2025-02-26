@@ -1,5 +1,6 @@
 <script>
-import { store } from '../store.js';
+import { useUserStore } from '../stores/user.js';
+
 export default {
     data() {
         return {
@@ -14,7 +15,7 @@ export default {
 
         const data = await response.json()
         console.log(data)
-        store.user = null
+        useUserStore().user = null
         this.$router.push('/')
     },
     methods: {
