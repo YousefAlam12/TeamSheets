@@ -249,9 +249,9 @@ def signup(request):
             return JsonResponse({'error': errorMsg}, status=400)
 
 
-@login_required
+# @login_required
 def user_api(request):
-    if request.user:
+    if request.user.is_authenticated:
         return JsonResponse({'user': request.user.as_dict()})
     else:
         return JsonResponse({'error': 'not authenticated'})
@@ -329,13 +329,13 @@ def my_games_api(request):
             fulltime=True, players=request.user).order_by('-date')
         played_games = [game.as_dict() for game in games]
 
-        inbox = request.user.invite_to.all()
-        inbox = [notif.as_dict() for notif in inbox]
+        # inbox = request.user.invite_to.all()
+        # inbox = [notif.as_dict() for notif in inbox]
 
         return JsonResponse({'myGames': myGames,
                              'adminGames': admin_games,
                              'playedGames': played_games,
-                             'inbox': inbox})
+                             'user': request.user.as_dict()})
 
 
 @login_required
@@ -426,6 +426,10 @@ def game_api(request, game_id):
         if DELETE.get('leave'):
             print('-------------------------------')
             print('leaving game')
+            player.delete()
+        
+        if DELETE.get('kick'):
+            player = Player.objects.get(user=DELETE['kick'], game=game)
             player.delete()
 
     # sets the pay status

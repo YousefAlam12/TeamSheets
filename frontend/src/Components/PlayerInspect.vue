@@ -27,7 +27,7 @@
                     <button v-else type="button" class="btn btn-success" data-bs-dismiss="modal"
                         @click="$emit('sendFriendRequest', player)">Send Friend Request</button>
 
-                    <button v-if="isAdmin" type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="">Kick
+                    <button v-if="isAdmin && !isFulltime" type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="$emit('kickPlayer', player)">Kick
                         Player</button>
                 </div>
             </div>
@@ -37,15 +37,18 @@
 
 <script>
 export default {
-    emits: ['sendFriendRequest'],
+    emits: ['sendFriendRequest', 'kickPlayer'],
     props: {
         player: {},
         user: {
             required: true
         },
+        isFulltime: {
+
+        },
         isAdmin: {
             required: true
-        }
+        },
     },
     data() {
         return {

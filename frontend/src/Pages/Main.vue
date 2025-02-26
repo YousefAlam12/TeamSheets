@@ -44,7 +44,8 @@ export default {
             activeTab: 'myGames',
             myGames : [],
             adminGames : [],
-            playedGames : []
+            playedGames : [],
+            user: null,
         }
     },
     async mounted() {
@@ -55,7 +56,9 @@ export default {
         this.myGames = data.myGames
         this.adminGames = data.adminGames
         this.playedGames = data.playedGames
-        console.log(data)
+        // console.log(data)
+        this.user = store.user
+        console.log(this.user)
     },
     methods: {
         setActiveTab(tab) {

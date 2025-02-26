@@ -27,9 +27,14 @@ class User(AbstractUser):
                 for to_user_id, to_user_username in self.from_user.all().values_list('to_user__id', 'to_user__username')
             ],
             'received_requests': [
-                {'id': from_user_id, 'username': from_user_username}
-                for from_user_id, from_user_username in self.to_user.all().values_list('from_user__id', 'from_user__username')
+                {'id': req.from_user.id, 'username': req.from_user.username, 'stats': req.from_user.stats}
+                # for from_user_id, from_user_username in self.to_user.all().values_list('from_user__id', 'from_user__username')
+                for req in self.to_user.all()
             ],
+            'game_invites': [
+                inv.as_dict()
+                for inv in self.invite_to.all()
+            ]
         }
 
     @property

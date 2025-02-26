@@ -50,7 +50,7 @@
                                     <div>
                                         <div class="d-flex">
                                             <button class="nav-link player-inspect" @click="setSelectedPlayer(player)" data-bs-toggle="modal" data-bs-target="#PlayerModal">{{ player.username }}</button>
-                                            <PlayerInspect :player="selectedPlayer" :user="user" :isAdmin="user.id == game.admin.id" @sendFriendRequest="sendFriendRequest"/>
+                                            <PlayerInspect :isFulltime="game.fulltime" :player="selectedPlayer" :user="user" :isAdmin="user.id == game.admin.id" @sendFriendRequest="sendFriendRequest" @kickPlayer="kickPlayer"/>
                                             <button v-if="player.paid" class="btn btn-sm btn-success ms-1"><i class="bi bi-hand-thumbs-up"></i></button>
                                         </div>
                                         <small class="form-text text-muted">
@@ -151,7 +151,7 @@
                                         </small>
                                     </div>
 
-                                    <div v-if="user.id == game.admin.id && !game.fulltime">
+                                    <div class="d-flex align-items-center" v-if="user.id == game.admin.id && !game.fulltime">
                                         <button class="btn btn-sm btn-primary" @click="changeTeam(player, 'A')">A</button>
                                         <button class="btn btn-sm btn-danger" @click="changeTeam(player, 'B')">B</button>
                                     </div>
@@ -431,6 +431,26 @@ export default {
                 const data = await response.json()
                 // this.user = data.user
                 Object.assign(store.user, data.user)
+            }
+        },
+        async kickPlayer(player) {
+            if (confirm(`Are you sure you want to kick ${player.username} from the game?`)) {
+                const response = await fetch(`http://localhost:8000/game/${this.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        'kick' : player.id
+                    }) 
+                })
+    
+                const data = await response.json()
+                if (response.ok) {
+                    this.game = data.game
+                    this.paid = null
+                }
             }
         },
     }

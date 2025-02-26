@@ -1,5 +1,6 @@
 <template>
-    <div v-if="user && user.received_requests" class="container pt-3">
+    <!-- <div v-if="user && user.received_requests" class="container pt-3"> -->
+    <div v-if="user" class="container pt-3">
         <div class="h1 text-center border rounded bg-light p-2 mb-3">
             Friends List
         </div>
@@ -140,6 +141,10 @@ export default {
                 // this.user = data.user
                 Object.assign(store.user, data.user)
                 store.user.received_requests = store.user.received_requests.filter(req => req.id !== requestUser.id);
+                if (accept) {
+                    store.user.friends.push(requestUser)
+                    store.user.friends.sort((a, b) => a.id - b.id)
+                }
             }
         },
         // send friend request to a user in the userlist

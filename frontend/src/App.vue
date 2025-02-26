@@ -1,6 +1,6 @@
 <template>
     <main class="container pt-4">
-        <nav v-if="!hideNavbar" class="navbar navbar-expand-lg navbar-light bg-light rounded"
+        <nav v-if="!hideNavbar && store.user" class="navbar navbar-expand-lg navbar-light bg-light rounded"
             :class="{ 'expanded-navbar': isExpanded }">
             <div class="container-fluid">
                 <!-- Navbar toggle button for mobile -->
