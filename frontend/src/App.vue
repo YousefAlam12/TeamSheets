@@ -13,7 +13,10 @@
                 <!-- Navbar links that collapse on smaller screens -->
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <div class="navbar-nav">
-                        <router-link class="nav-link" exact-active-class="active" :to="{ name: 'Main' }">
+                        <router-link 
+                        class="nav-link"
+                        :class="{ 'text-warning': store.user.game_invites != null && store.user.game_invites.length > 0}"
+                        exact-active-class="active" :to="{ name: 'Main' }">
                             Home
                         </router-link>
 

@@ -6,10 +6,28 @@
         <!-- <h5 class="card-title">{{ x.name }} <span class="badge bg-primary">{{ x.players ? x.players.length : '' }}/{{ x.totalPlayers }}</span></h5> -->
 
         <div class="card mt-3">
-                <div class="card-header">{{ game.date }}</div>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    {{ game.date }}
+                    <div v-if="user && (user.id == game.admin.id && !game.fulltime)" @click="togglePrivacy">
+                        <span class="badge bg-primary btn btn-primary">
+                            {{ game.is_private ? 'Private' : 'Public' }} 
+                            <i class="bi bi-arrow-repeat"></i>
+                        </span>
+                    </div>
+
+                    <div v-else>
+                        <span class="badge bg-primary">
+                            {{ game.is_private ? 'Private' : 'Public' }}  
+                        </span>
+                    </div>
+                </div>
+                
                 <div class="card-body">
                     <!-- <h5 class="card-title">{{ game.name }} <span class="badge bg-primary">{{ game.players.length }}/{{ game.totalPlayers }}</span></h5> -->
-                    <h5 class="card-title">{{ game.name }} <span class="badge bg-primary">{{ game.players ? game.players.length : '' }}/{{ game.totalPlayers }}</span></h5>
+                    <h5 class="card-title">
+                        {{ game.name }} 
+                        <span class="badge bg-primary">{{ game.players ? game.players.length : '' }}/{{ game.totalPlayers }}</span>
+                    </h5>
                     <div class="border rounded bg-info p-2">
                         <p class="card-text">Description: {{ game.description }}</p>
                         <ul class="list-group list-group-flush">
@@ -96,8 +114,7 @@
                                     <div>
                                         <div class="d-flex">
                                             <button class="nav-link player-inspect" @click="setSelectedPlayer(player)" data-bs-toggle="modal" data-bs-target="#PlayerModal">{{ player.username }}</button>
-                                            <PlayerInspect :player="selectedPlayer" :user="user" :isAdmin="user.id == game.admin.id" @sendFriendRequest="sendFriendRequest"/>
-                                            <button v-if="player.paid" class="btn btn-sm btn-success ms-1"><i class="bi bi-hand-thumbs-up"></i></button>
+                                            <PlayerInspect :isFulltime="game.fulltime" :player="selectedPlayer" :user="user" :isAdmin="user.id == game.admin.id" @sendFriendRequest="sendFriendRequest" @kickPlayer="kickPlayer"/>                                            <button v-if="player.paid" class="btn btn-sm btn-success ms-1"><i class="bi bi-hand-thumbs-up"></i></button>
                                         </div>
                                         <small class="form-text text-muted">
                                             <div v-if="player.stats" class="d-flex flex-row bd-highlight">
@@ -134,8 +151,7 @@
                                     <div>
                                         <div class="d-flex">
                                             <button class="nav-link player-inspect" @click="setSelectedPlayer(player)" data-bs-toggle="modal" data-bs-target="#PlayerModal">{{ player.username }}</button>
-                                            <PlayerInspect :player="selectedPlayer" :user="user" :isAdmin="user.id == game.admin.id" @sendFriendRequest="sendFriendRequest"/>
-                                            <button v-if="player.paid" class="btn btn-sm btn-success ms-1"><i class="bi bi-hand-thumbs-up"></i></button>
+                                            <PlayerInspect :isFulltime="game.fulltime" :player="selectedPlayer" :user="user" :isAdmin="user.id == game.admin.id" @sendFriendRequest="sendFriendRequest" @kickPlayer="kickPlayer"/>                                            <button v-if="player.paid" class="btn btn-sm btn-success ms-1"><i class="bi bi-hand-thumbs-up"></i></button>
                                         </div>
                                         <small class="form-text text-muted">
                                             <div v-if="player.stats" class="d-flex flex-row bd-highlight">
@@ -175,6 +191,7 @@
                             <button v-if="game.players ? !game.players.find(player => player.id == user.id) && game.players.length < game.totalPlayers : ''" @click="joinGame" class="btn btn-success">Join</button>
                             <button v-if="game.players ? game.players.find(player => player.id == user.id) : ''" @click="leaveGame" class="btn btn-warning">Leave</button>
                         </div>
+                        <button v-if="user && (user.id == game.admin.id && !game.fulltime)" class="btn btn-danger mt-4" @click="cancelGame">Cancel Game</button>
                     </div>
                 </div>
             </div>
@@ -248,7 +265,7 @@ export default {
     computed: {
         id() {
             return this.$route.params.id
-        }
+        },
     },
     data() {
         return {
@@ -273,12 +290,17 @@ export default {
             credentials: 'include'
         })
         const data = await response.json()
-        console.log(data)
         // this.user = data.user
         // this.user = store.user
         this.user = useUserStore().user
         this.game = data.game
         this.paid = data.paid
+
+        if (this.game.is_private) {
+            if (!this.user.game_invites.some(invite => invite.game_id === this.game.id) && !this.game.players.some(player => player.id == this.user.id)) {
+                this.$router.push('/')
+            }
+        }
 
         if (this.game.fulltime) {
             const response2 = await fetch(`http://localhost:8000/ratings/${this.id}`, {
@@ -306,6 +328,8 @@ export default {
                 console.log(data)
                 this.game = data.game
                 this.paid = data.paid
+                useUserStore().saveUser(data.user)
+                this.user = useUserStore().user
             }
         },
         async leaveGame() {
@@ -450,7 +474,44 @@ export default {
                 const data = await response.json()
                 if (response.ok) {
                     this.game = data.game
-                    this.paid = null
+                }
+            }
+        },
+        async togglePrivacy() {
+            if (confirm(`Are you sure you want to change the privacy status of the game?`)) {
+                const response = await fetch(`http://localhost:8000/game/${this.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        'toggle_privacy' : true
+                    }) 
+                })
+    
+                const data = await response.json()
+                if (response.ok) {
+                    this.game = data.game
+                }
+            }
+        },
+        async cancelGame() {
+            if (confirm(`Are you sure you want to CANCEL this game?`)) {
+                const response = await fetch(`http://localhost:8000/game/${this.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        'cancel_game' : true
+                    }) 
+                })
+    
+                const data = await response.json()
+                if (response.ok) {
+                    this.$router.push('/games')
                 }
             }
         },

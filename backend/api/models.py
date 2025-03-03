@@ -76,9 +76,9 @@ class Game(models.Model):
     address = models.CharField(max_length=100)
     postcode = models.CharField(max_length=50)
     location = models.PointField()
-    admin = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='admin_games')
+    admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='admin_games')
     players = models.ManyToManyField(User, through='Player')
+    is_private = models.BooleanField(default=False)
     fulltime = models.BooleanField(default=False)
 
     def __str__(self):
@@ -102,6 +102,7 @@ class Game(models.Model):
             'address': self.address,
             'postcode': self.postcode,
             'location': self.location.coords,
+            'is_private': self.is_private,
             'fulltime': self.fulltime,
             'admin': {
                 'id': self.admin.id,
@@ -175,6 +176,7 @@ class GameInvite(models.Model):
 
     def as_dict(self):
         return {
+            'id': self.id,
             'from_user': self.from_user.username,
             'game_id': self.game.id,
             'game_name': self.game.name,

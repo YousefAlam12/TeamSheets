@@ -348,7 +348,7 @@ def games_api(request):
 
         # check if necessary fields are filled
         required_fields = ['name', 'date', 'start_time', 'end_time',
-                           'totalPlayers', 'price', 'address', 'postcode', 'longitude', 'latitude']
+                           'totalPlayers', 'price', 'address', 'postcode', 'longitude', 'latitude', 'is_private']
 
         for field in required_fields:
             if not POST.get(field):
@@ -366,6 +366,7 @@ def games_api(request):
             address=POST['address'],
             postcode=POST['postcode'],
             location=Point(POST['longitude'], POST['latitude']),
+            is_private=POST['is_private'],
             admin=request.user
         )
         newGame.save()
@@ -381,7 +382,7 @@ def games_api(request):
     # games = Game.objects.filter(fulltime=False, date__gte=today).order_by('date')
     # orders games by distance from user
     games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(
-        fulltime=False, date__gte=today).order_by('distance', 'date')
+        fulltime=False, is_private=False, date__gte=today).order_by('distance', 'date')
     data = [game.as_dict() for game in games]
     return JsonResponse({'games': data})
 
@@ -412,11 +413,14 @@ def game_api(request, game_id):
 
         if POST.get('join'):
             print('joining game')
-            player = Player(
-                user=request.user,
-                game=game,
-            )
+            player = Player(user=request.user, game=game)
             player.save()
+
+            # remove all game invitations to teh game when joining
+            game_invites = GameInvite.objects.filter(to_user=request.user, game=game)
+            if len(game_invites) > 0:
+                for inv in game_invites:
+                    inv.delete()
 
     # leaves the user from the game
     if request.method == 'DELETE':
@@ -432,6 +436,10 @@ def game_api(request, game_id):
             player = Player.objects.get(user=DELETE['kick'], game=game)
             player.delete()
 
+        if DELETE.get('cancel_game'):
+            game.delete()
+            return JsonResponse({'success' : 'game is deleted'})
+
     # sets the pay status
     if request.method == 'PUT':
         PUT = json.loads(request.body)
@@ -444,9 +452,14 @@ def game_api(request, game_id):
             game.fulltime = True
             game.save()
 
+        if PUT.get('toggle_privacy'):
+            game.is_private = not game.is_private
+            game.save()
+
     # sends the game and pay status as dict to update the page
     return JsonResponse({'game': game.as_dict(),
-                        'paid': player.paid})
+                        'paid': player.paid,
+                        'user' : request.user.as_dict()})
 
 
 @login_required
@@ -524,5 +537,13 @@ def gameInvite(request, game_id):
 
         game_invite, created = GameInvite.objects.get_or_create(
             from_user=request.user, to_user=to_user, game=game)
+        
         return JsonResponse({'success': 'user has been invited'})
+
+    if request.method == 'DELETE':
+        DELETE = json.loads(request.body)
+        game_invite = GameInvite.objects.get(id=DELETE['game_invite'])
+        game_invite.delete()
+
+        return JsonResponse({'user': request.user.as_dict()})
 

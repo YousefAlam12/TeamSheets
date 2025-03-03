@@ -1,8 +1,14 @@
 <template>
     <div class="card mt-3" v-for="game in games">
-        <div class="card-header">
-            {{ game.date }}
-            <span v-if="game.fulltime" class="badge bg-warning">Fulltime</span>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                {{ game.date }}
+                <span v-if="game.fulltime" class="badge bg-warning">Fulltime</span>
+            </div>
+
+            <span class="badge bg-primary btn btn-primary">
+                {{ game.is_private ? 'Private' : 'Public' }}  
+            </span>
         </div>
         <div class="card-body">
             <!-- <router-link class="nav-link" :to="{ name: 'GameDetails', params: {id: game.id, game: game} }"> -->
