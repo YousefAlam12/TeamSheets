@@ -34,6 +34,10 @@ class User(AbstractUser):
             'game_invites': [
                 inv.as_dict()
                 for inv in self.invite_to.all()
+            ],
+            'subscribed_games': [
+                notif.as_dict()
+                for notif in self.subscribed_games.all()
             ]
         }
 
@@ -184,3 +188,15 @@ class GameInvite(models.Model):
 
     def __str__(self):
         return f"{self.from_user} invited {self.to_user} to {self.game}"
+
+class Notification(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="subscribed_games", on_delete=models.CASCADE)
+
+    def as_dict(self):
+        return {
+            'game': self.game.id,
+        }
+
+    def __str__(self):
+        return f"{self.user.username} is subscribed to {self.game} notifications"

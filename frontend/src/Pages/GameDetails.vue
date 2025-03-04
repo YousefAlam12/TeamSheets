@@ -27,6 +27,8 @@
                     <h5 class="card-title">
                         {{ game.name }} 
                         <span class="badge bg-primary">{{ game.players ? game.players.length : '' }}/{{ game.totalPlayers }}</span>
+                        <button v-if="!isSubscribed" class="btn btn-sm btn-success ms-2" @click="subscribe"><i class="bi bi-bell-fill"></i></button>
+                        <button v-else class="btn btn-sm btn-danger ms-2" @click="unsubscribe"><i class="bi bi-bell-slash"></i></button>
                     </h5>
                     <div class="border rounded bg-info p-2">
                         <p class="card-text">Description: {{ game.description }}</p>
@@ -266,6 +268,11 @@ export default {
         id() {
             return this.$route.params.id
         },
+        isSubscribed() {
+            if (this.user) {
+                return this.user.subscribed_games.some(g => g.game === this.game.id)
+            }
+        }
     },
     data() {
         return {
@@ -515,6 +522,40 @@ export default {
                 if (response.ok) {
                     this.$router.push('/games')
                 }
+            }
+        },
+        async subscribe() {
+            const response = await fetch(`http://localhost:8000/game/${this.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    'subscribe': true
+                })
+            })
+            const data = await response.json()
+            if (response.ok) {
+                useUserStore().saveUser(data.user)
+                this.user = useUserStore().user
+            }
+        },
+        async unsubscribe() {
+            const response = await fetch(`http://localhost:8000/game/${this.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    'unsubscribe': true
+                })
+            })
+            const data = await response.json()
+            if (response.ok) {
+                useUserStore().saveUser(data.user)
+                this.user = useUserStore().user
             }
         },
     }

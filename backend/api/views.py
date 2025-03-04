@@ -17,7 +17,7 @@ from pymoo.optimize import minimize
 from pymoo.operators.mutation.pm import PM
 ##########################################################
 
-from .models import User, Game, Player, Rating, FriendRequest, GameInvite
+from .models import User, Game, Player, Rating, FriendRequest, GameInvite, Notification
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
@@ -448,7 +448,7 @@ def game_api(request, game_id):
                 for inv in game_invites:
                     inv.delete()
 
-    # leaves the user from the game
+    # DELETE methods for game
     if request.method == 'DELETE':
         DELETE = json.loads(request.body)
         print(DELETE)
@@ -466,10 +466,16 @@ def game_api(request, game_id):
             game.delete()
             return JsonResponse({'success' : 'game is deleted'})
 
-    # sets the pay status
+        if DELETE.get('unsubscribe'):
+            notificaton = Notification.objects.get(game=game, user=request.user)
+            notificaton.delete()
+            return JsonResponse({'user': request.user.as_dict()})
+
+    # PUT methods for game
     if request.method == 'PUT':
         PUT = json.loads(request.body)
 
+        # sets the pay status
         if PUT.get('paid'):
             player.paid = True
             player.save()
@@ -481,6 +487,11 @@ def game_api(request, game_id):
         if PUT.get('toggle_privacy'):
             game.is_private = not game.is_private
             game.save()
+
+        if PUT.get('subscribe'):
+            notification = Notification(game=game, user=request.user)
+            notification.save()
+            return JsonResponse({'user': request.user.as_dict()})
 
     # sends the game and pay status as dict to update the page
     return JsonResponse({'game': game.as_dict(),
