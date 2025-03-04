@@ -21,6 +21,9 @@ from .models import User, Game, Player, Rating, FriendRequest, GameInvite
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
+
+from django.core.mail import send_mail
+from django.conf import settings
 import json
 
 ###############################################################################################
@@ -82,17 +85,30 @@ class TeamBalancingProblem(Problem):
 @login_required
 def balanceTeams(request, game_id):
     players = Player.objects.filter(game=game_id).select_related('user')
+    game = Game.objects.get(id=game_id)
 
-    # try find sweet spot for different size game and change params
+    player_settings = {
+        12: (25, 60),
+        14: (30, 70),
+        16: (35, 80),
+        18: (40, 90),
+        20: (45, 95),
+        22: (50, 100)
+    }
+
+    # Default values
+    population_size = 20
+    n_gen = 50
+
+    # adjust pop_size and generations to get more balanced results
+    if game.totalPlayers in player_settings:
+        population_size, n_gen = player_settings[game.totalPlayers]
 
     # creating and solving the balancing problem using nsga-ii
     problem = TeamBalancingProblem(players)
-    # algorithm = NSGA2(pop_size=50, mutation=PM(prob=0.3))
-    algorithm = NSGA2(pop_size=20, mutation=PM(prob=0.3))
+    algorithm = NSGA2(pop_size=population_size, mutation=PM(prob=0.3))
 
-    # result = minimize(problem, algorithm, termination=("n_gen", 100), verbose=False)
-    result = minimize(problem, algorithm, termination=(
-        "n_gen", 50), verbose=False)
+    result = minimize(problem, algorithm, termination=("n_gen", n_gen), verbose=False)
 
     # getting all soluitions where they have equal/fair amount of players
     valid_solutions = []
@@ -105,9 +121,9 @@ def balanceTeams(request, game_id):
     # removing duplicate solutions to allow different teams to be given on second call
     best_solutions = []
     [best_solutions.append(s)
-     for s in valid_solutions if s not in best_solutions]
+    for s in valid_solutions if s not in best_solutions]
     if len(best_solutions) <= 0:
-        return JsonResponse({'error': 'error'}, status=400)
+        return JsonResponse({'error': 'error in balancing'}, status=400)
 
     best_solution = random.choice(best_solutions)
 
@@ -130,7 +146,7 @@ def balanceTeams(request, game_id):
     print('\n===Team B===')
     print(teamB)
 
-    game = Game.objects.get(id=game_id)
+    # game = Game.objects.get(id=game_id)
     return JsonResponse({'game': game.as_dict()})
 
 ###############################################################################################
@@ -159,6 +175,16 @@ def test_api_view(request):
     # })
 
     # print(request.user.stats)
+
+    # send_mail(
+    #     "Subject here",
+    #     f"Here is the message. Testing 123.....{20 + 20}",
+    #     'settings.EMAIL_HOST_USER',
+    #     [request.user.email],
+    #     fail_silently=False,
+    # )
+
+
     x = Game.objects.get(id=4)
     return JsonResponse({
         'user': request.user.as_dict(),

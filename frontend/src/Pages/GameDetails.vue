@@ -388,15 +388,17 @@ export default {
             }
         },
         async balanceTeams() {
-            this.loading = true
-            const response = await fetch(`http://localhost:8000/balanceTeams/${this.id}`, {
-                credentials: 'include'
-            })
-            const data = await response.json()
-            if (response.ok) {
-                this.game = data.game
+            if (this.loading == false) {
+                this.loading = true
+                const response = await fetch(`http://localhost:8000/balanceTeams/${this.id}`, {
+                    credentials: 'include'
+                })
+                const data = await response.json()
+                if (response.ok) {
+                    this.game = data.game
+                }
+                this.loading = false
             }
-            this.loading = false
         },
         async fulltime() {
             if (confirm("Are you sure you want to call fulltime? This is irreversible.")) {
