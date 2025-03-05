@@ -45,8 +45,7 @@ class TeamBalancingProblem(Problem):
                          type_var=int)
 
     def _evaluate(self, x, out, *args, **kwargs):
-        attack_balance = []
-        defence_balance = []
+        ad_balance = []
         skill_balance = []
 
         for solution in x:
@@ -61,8 +60,7 @@ class TeamBalancingProblem(Problem):
                 if player.user.stats != None:
                     team_stats[team]["attack"] += player.user.stats["attack"]
                     team_stats[team]["defence"] += player.user.stats["defence"]
-                    team_stats[team]["skill"] += (player.user.stats["strength"] +
-                                                  player.user.stats["speed"] + player.user.stats["technique"])/3
+                    team_stats[team]["skill"] += (player.user.stats["strength"] + player.user.stats["speed"] + player.user.stats["technique"])/3
                 else:
                     # if player is new stats will just be set to 5 by default
                     team_stats[team]["attack"] += 5
@@ -70,16 +68,14 @@ class TeamBalancingProblem(Problem):
                     team_stats[team]["skill"] += 5
 
             # Calculate balances (minimize differences between teams)
-            attack_diff = abs((team_stats[0]['attack'] + team_stats[0]['skill']) - (
-                team_stats[1]['attack'] + team_stats[1]['skill']))
-            defence_diff = abs((team_stats[0]['defence'] + team_stats[0]['skill']) - (
-                team_stats[1]['defence'] + team_stats[1]['skill']))
+            ad_diff = abs((team_stats[0]['attack'] + team_stats[0]['defence']) - (team_stats[1]['attack'] + team_stats[1]['defence']))
+            skill_diff = abs(team_stats[0]['skill'] - team_stats[1]['skill'])
 
-            attack_balance.append(attack_diff)
-            defence_balance.append(defence_diff)
+            ad_balance.append(ad_diff)
+            skill_balance.append(skill_diff)
 
         # Assign objectives to minimize
-        out["F"] = np.column_stack([attack_balance, defence_balance])
+        out["F"] = np.column_stack([ad_balance, skill_balance])
 
 
 @login_required
