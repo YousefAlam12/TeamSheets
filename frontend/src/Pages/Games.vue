@@ -105,8 +105,7 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="filter-date" class="form-label">Date</label>
-                            <!-- <input v-model="filter.date" type="date" class="form-control" id="filter-date"> -->
-                            <input v-model="filter.date" type="month" class="form-control" id="filter-date">
+                            <input v-model="filter.date" type="date" class="form-control" id="filter-date">
                         </div>
 
                         <div class="mb-3">
@@ -239,18 +238,7 @@ export default {
         },
         filterGames(filteredGames) {
             if (this.filter.date != null) {
-                // Extract year and month from filter
-                const filterYear = this.filter.date.substring(0, 4)
-                const filterMonth = this.filter.date.substring(5, 7)
-
-                // Filter games based on matching year and month
-                filteredGames = filteredGames.filter(game => {
-                    const gameDate = new Date(game.date)
-                    const gameYear = gameDate.getFullYear()
-                    const gameMonth = (gameDate.getMonth() + 1).toString().padStart(2, '0')
-                    
-                    return gameYear === parseInt(filterYear) && gameMonth === filterMonth
-                })
+                filteredGames = filteredGames.filter(game => game.date == this.filter.date)
             }
             if (this.filter.price != null && typeof this.filter.price == 'number') {
                 filteredGames = filteredGames.filter(game => game.price <= this.filter.price)
