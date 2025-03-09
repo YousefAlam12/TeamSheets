@@ -303,11 +303,11 @@ export default {
         this.game = data.game
         this.paid = data.paid
 
-        if (this.game.is_private) {
-            if (!this.user.game_invites.some(invite => invite.game_id === this.game.id) && !this.game.players.some(player => player.id == this.user.id)) {
-                this.$router.push('/')
-            }
-        }
+        // if (this.game.is_private) {
+        //     if (!this.user.game_invites.some(invite => invite.game_id === this.game.id) && !this.game.players.some(player => player.id == this.user.id)) {
+        //         this.$router.push('/')
+        //     }
+        // }
 
         if (this.game.fulltime) {
             const response2 = await fetch(`http://localhost:8000/ratings/${this.id}`, {

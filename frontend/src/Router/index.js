@@ -7,6 +7,7 @@ import Signup from '../Pages/Signup.vue'
 import Logout from '../Pages/Logout.vue'
 import GameDetails from '../Pages/GameDetails.vue'
 import FriendsList from '../Pages/FriendsList.vue'
+import { useUserStore } from '../stores/user'
 
 // let base = (import.meta.env.MODE == 'development') ? import.meta.env.BASE_URL : ''
 
@@ -30,12 +31,24 @@ const router = createRouter({
                 const response = await fetch('http://localhost:8000/allGames', {
                     credentials: 'include'
                 })
+                const user = useUserStore().user
                 const data = await response.json()
                 const gameExists = await data.games.find(game => game.id == to.params.id)
 
+                // prevent access to game that does not exist
                 if (gameExists) {
-                    // to.params.game = gameExists;
-                    next()
+                    // prevents access to private game if not a player/invited
+                    if (gameExists.is_private && gameExists.admin.id != user.id) {
+                        if (!user.game_invites.some(invite => invite.game_id === gameExists.id) && !gameExists.players.some(player => player.id == user.id)) {
+                            next({name: 'Main'})
+                        }
+                        else {
+                            next()
+                        }
+                    }
+                    else {
+                        next()
+                    }
                 }
                 else {
                     next({name: 'Main'})
