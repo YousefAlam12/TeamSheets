@@ -24,6 +24,7 @@ from django.contrib.gis.db.models.functions import Distance
 
 from django.core.mail import send_mail
 from django.conf import settings
+import threading
 import json
 
 ###############################################################################################
@@ -181,7 +182,7 @@ def test_api_view(request):
     # )
 
 
-    x = Game.objects.get(id=4)
+    x = Game.objects.get(id=2)
     return JsonResponse({
         'user': request.user.as_dict(),
         'game': x.as_dict()
@@ -285,10 +286,17 @@ def send_friend_request(request):
         POST = json.loads(request.body)
         from_user = request.user
         to_user = User.objects.get(id=POST['to_user'])
-        print(to_user)
         friend_request, created = FriendRequest.objects.get_or_create(
             from_user=from_user, to_user=to_user)
         if created:
+            # send an notification to the user being invited
+            threading.Thread(
+                target=requestNotification, 
+                args=(
+                    f"Friend request from {request.user}",
+                    f"You have received a friend from {request.user}. \n\n Check it out on TeamSheets.",
+                    to_user.email)
+                    ).start()
             return JsonResponse({'user': request.user.as_dict()})
         else:
             return JsonResponse({'error': 'user does not exist'}, status=400)
@@ -302,14 +310,23 @@ def friends_api(request):
 
     if request.method != 'GET':
         JSON = json.loads(request.body)
-        friend_request = FriendRequest.objects.get(
-            from_user=JSON['from_user'], to_user=request.user)
+        friend_request = FriendRequest.objects.get(from_user=JSON['from_user'], to_user=request.user)
+        to_user = User.objects.get(id=friend_request.to_user.id)
 
         if request.method == 'POST':
             if friend_request.to_user == request.user:
                 friend_request.to_user.friends.add(friend_request.from_user)
                 friend_request.from_user.friends.add(friend_request.to_user)
                 friend_request.delete()
+
+                # send an notification to the user being invited
+                threading.Thread(
+                    target=requestNotification, 
+                    args=(
+                        f"Now friends with {to_user.username}",
+                        f"You are now friends with {to_user.username}. \n\n Check it out on TeamSheets.",
+                        from_user.email)
+                        ).start()
             else:
                 return JsonResponse({'error': 'user does not exist'}, status=400)
 
@@ -370,7 +387,7 @@ def games_api(request):
 
         # check if necessary fields are filled
         required_fields = ['name', 'date', 'start_time', 'end_time',
-                           'totalPlayers', 'price', 'address', 'postcode', 'longitude', 'latitude', 'is_private']
+                           'totalPlayers', 'price', 'address', 'postcode', 'longitude', 'latitude']
 
         for field in required_fields:
             if not POST.get(field):
@@ -388,6 +405,7 @@ def games_api(request):
             address=POST['address'],
             postcode=POST['postcode'],
             location=Point(POST['longitude'], POST['latitude']),
+            # is_private=POST.get('is_private', False),
             is_private=POST['is_private'],
             admin=request.user
         )
@@ -438,7 +456,16 @@ def game_api(request, game_id):
             player = Player(user=request.user, game=game)
             player.save()
 
-            # remove all game invitations to teh game when joining
+            # send email to subscribers
+            threading.Thread(
+                target=gameNotification, 
+                args=(
+                    game,
+                    f"{player.user.username} joined {game.name}",
+                    f"{player.user.username} has now joined {game.name} scheduled for: {game.date} from {game.start_time}-{game.end_time}.")
+                    ).start()
+
+            # remove all game invitations to the game when joining
             game_invites = GameInvite.objects.filter(to_user=request.user, game=game)
             if len(game_invites) > 0:
                 for inv in game_invites:
@@ -452,13 +479,35 @@ def game_api(request, game_id):
         if DELETE.get('leave'):
             print('-------------------------------')
             print('leaving game')
+            # send email to subscribers
+            threading.Thread(
+                target=gameNotification, 
+                args=(
+                    game,
+                    f"{player.user.username} left {game.name}",
+                    f"{player.user.username} has now left {game.name} scheduled for: {game.date} from {game.start_time}-{game.end_time}.")
+                    ).start()
             player.delete()
         
         if DELETE.get('kick'):
             player = Player.objects.get(user=DELETE['kick'], game=game)
+            # send email to all players/subscribers
+            gameNotification(
+                game,
+                f"{player.user.username} kicked from {game.name}",
+                f"{player.user.username} has now been kicked from {game.name} scheduled for: {game.date} from {game.start_time}-{game.end_time}.",
+                kickEmail=player.user.email
+            )
             player.delete()
 
         if DELETE.get('cancel_game'):
+            # send email to all players/subscribers
+            gameNotification(
+                game,
+                f"{game.name} is cancelled",
+                f"{game.name} scheduled for: {game.date} from {game.start_time}-{game.end_time} has now been cancelled.",
+                True
+            )
             game.delete()
             return JsonResponse({'success' : 'game is deleted'})
 
@@ -479,6 +528,16 @@ def game_api(request, game_id):
         if PUT.get('fulltime'):
             game.fulltime = True
             game.save()
+
+            # send email to all players/subscribers
+            threading.Thread(
+                target=gameNotification, 
+                args=(
+                    game,
+                    f"Fulltime for {game.name}",
+                    f"It's fulltime, it's time to rate all the players!!",
+                    True)
+                    ).start()
 
         if PUT.get('toggle_privacy'):
             game.is_private = not game.is_private
@@ -570,6 +629,15 @@ def gameInvite(request, game_id):
 
         game_invite, created = GameInvite.objects.get_or_create(
             from_user=request.user, to_user=to_user, game=game)
+
+        # send an notification to the user being invited
+        threading.Thread(
+                target=requestNotification, 
+                args=(
+                    f"Game Invite for {game.name}",
+                    f"You have been invited by {request.user.username} to {game.name} scheduled for: {game.date} from {game.start_time}-{game.end_time}. \n\n Go check it out on TeamSheets.",
+                    to_user.email)
+                    ).start()
         
         return JsonResponse({'success': 'user has been invited'})
 
@@ -580,3 +648,38 @@ def gameInvite(request, game_id):
 
         return JsonResponse({'user': request.user.as_dict()})
 
+
+# sends email notification about game statuses
+def gameNotification(game, subject, message, include_players=False, kickEmail=None):
+    subscribers = Notification.objects.filter(game=game.id)
+    recipients = [sub.user.email for sub in subscribers]
+
+    if kickEmail != None:
+        recipients.append(kickEmail)
+    
+    if include_players:
+        players = Player.objects.filter(game=game)
+        p = [player.user.email for player in players]
+
+        for email in p:
+            if email not in recipients:
+                recipients.append(email)
+
+    send_mail(
+        subject,
+        message,
+        'settings.EMAIL_HOST_USER',
+        recipients,
+        fail_silently=False,
+    )
+    
+
+# sends email notification about invites/friendrequests statuses
+def requestNotification(subject, message, recipient):
+    send_mail(
+        subject,
+        message,
+        'settings.EMAIL_HOST_USER',
+        [recipient],
+        fail_silently=False,
+    )

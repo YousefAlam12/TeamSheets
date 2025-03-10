@@ -189,6 +189,7 @@ class GameInvite(models.Model):
     def __str__(self):
         return f"{self.from_user} invited {self.to_user} to {self.game}"
 
+
 class Notification(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name="subscribed_games", on_delete=models.CASCADE)

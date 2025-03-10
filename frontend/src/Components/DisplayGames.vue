@@ -1,5 +1,9 @@
 <template>
-    <div class="card mt-3" v-for="game in games">
+    <div v-if="isEmpty" class="card mt-3 d-flex justify-content-between align-items-center">
+        No new games available...
+    </div>
+
+    <div v-else class="card mt-3" v-for="game in games">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div>
                 {{ game.date }}
@@ -31,6 +35,13 @@ export default {
         games: {
             type: Array,
             required: true
+        }
+    },
+    computed: {
+        isEmpty() {
+            if (this.games) {
+                return this.games.length <= 0
+            }
         }
     },
     data() {

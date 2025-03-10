@@ -93,7 +93,7 @@
                                     </div>
 
                                     <div v-else class="d-flex align-items-center">
-                                        <button v-if="ratedPlayers ? !ratedPlayers.find(user => user.id == player.id) : ''" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal" @click="setSelectedPlayer(player)">Rate</button>
+                                        <button v-if="ratedPlayers ? !ratedPlayers.find(user => user.id == player.id) && isPlaying : ''" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal" @click="setSelectedPlayer(player)">Rate</button>
                                     </div>
                                 </td>
                             </tr>
@@ -175,7 +175,7 @@
                                     </div>
 
                                     <div v-else class="d-flex align-items-center">
-                                        <button v-if="ratedPlayers ? !ratedPlayers.find(user => user.id == player.id) : ''" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal" @click="setSelectedPlayer(player)">Rate</button>
+                                        <button v-if="ratedPlayers ? !ratedPlayers.find(user => user.id == player.id) && isPlaying : ''" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal" @click="setSelectedPlayer(player)">Rate</button>
                                     </div>
                                 </td>
                             </tr>
@@ -271,6 +271,11 @@ export default {
         isSubscribed() {
             if (this.user) {
                 return this.user.subscribed_games.some(g => g.game === this.game.id)
+            }
+        },
+        isPlaying() {
+            if (this.game) {
+                return this.game.players.find(player => player.id == this.user.id)
             }
         }
     },
@@ -424,6 +429,12 @@ export default {
                     this.game = data.game
                 }
             }
+
+            const response2 = await fetch(`http://localhost:8000/ratings/${this.id}`, {
+                credentials: 'include'
+            })
+            const data = await response2.json()
+            this.ratedPlayers = data.ratedPlayers
         },
         async setSelectedPlayer(currentPlayer) {
             this.selectedPlayer = currentPlayer
