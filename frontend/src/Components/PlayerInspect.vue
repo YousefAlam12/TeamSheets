@@ -1,5 +1,5 @@
 <template>
-    <!-- Filter Modal -->
+    <!-- Player Inspect Modal -->
     <div class="modal fade" id="PlayerModal" tabindex="-1" aria-labelledby="PlayerModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div v-if="player" class="modal-content">

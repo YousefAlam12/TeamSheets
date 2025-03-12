@@ -19,7 +19,7 @@
             </div>
 
             <!-- <DisplayGames :games="games"/> -->
-            <DisplayGames :games="shownGames"/>
+            <DisplayGames :games="shownGames" :user_id="store.user.id"/>
         </div>
 
         <!-- Create new game Modal -->
@@ -113,6 +113,11 @@
                             <input v-model="filter.price" type="number" class="form-control" id="filter-price" min="0">
                             <small id="priceInfo" class="form-text text-muted">All games upto selected price</small>
                         </div>
+
+                        <div class="mb-3">
+                            <label for="filter-address" class="form-label">Address</label>
+                            <input v-model="filter.address" type="search" class="form-control" id="filter-address">
+                        </div>
                     </div>
 
                     <div class="modal-footer">
@@ -127,6 +132,7 @@
 
 <script>
 import DisplayGames from '../Components/DisplayGames.vue';
+import { useUserStore } from '../stores/user';
 
 export default {
     components: {
@@ -153,8 +159,10 @@ export default {
             shownGames : [],
             filter : {
                 date: null,
-                price: null
-            }
+                price: null,
+                address: null,
+            },
+            store: useUserStore()
         }
     },
     async mounted() {
@@ -242,6 +250,11 @@ export default {
             }
             if (this.filter.price != null && typeof this.filter.price == 'number') {
                 filteredGames = filteredGames.filter(game => game.price <= this.filter.price)
+            }
+            if (this.filter.address != null) {
+                filteredGames = filteredGames.filter(game => {
+                    return (game.address+game.postcode).toLowerCase().includes(this.filter.address)
+                })
             }
             this.shownGames = filteredGames
         },

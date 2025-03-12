@@ -1,6 +1,6 @@
 <template>
     <div v-if="isEmpty" class="card mt-3 d-flex justify-content-between align-items-center">
-        No new games available...
+        No games found...
     </div>
 
     <div v-else class="card mt-3" v-for="game in games">
@@ -8,6 +8,7 @@
             <div>
                 {{ game.date }}
                 <span v-if="game.fulltime" class="badge bg-warning">Fulltime</span>
+                <span v-if="isPlaying(game)" class="badge bg-success">Playing</span>
             </div>
 
             <span class="badge bg-primary btn btn-primary">
@@ -35,14 +36,16 @@ export default {
         games: {
             type: Array,
             required: true
-        }
+        },
+        user_id: {}
     },
     computed: {
         isEmpty() {
             if (this.games) {
                 return this.games.length <= 0
             }
-        }
+        },
+        
     },
     data() {
         return {
@@ -52,6 +55,11 @@ export default {
 
     },
     methods: {
+        isPlaying(game) {
+            if (this.user_id) {
+                return game.players.find(player => player.id == this.user_id)
+            }
+        }
     }
 }
 </script>

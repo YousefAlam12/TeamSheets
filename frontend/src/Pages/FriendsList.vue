@@ -1,5 +1,4 @@
 <template>
-    <!-- <div v-if="user && user.received_requests" class="container pt-3"> -->
     <div v-if="user" class="container pt-3">
         <div class="h1 text-center border rounded bg-light p-2 mb-3">
             Friends List

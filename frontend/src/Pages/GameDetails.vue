@@ -31,11 +31,15 @@
                         <button v-else class="btn btn-sm btn-danger ms-2" @click="unsubscribe"><i class="bi bi-bell-slash"></i></button>
                     </h5>
                     <div class="border rounded bg-info p-2">
-                        <p class="card-text">Description: {{ game.description }}</p>
+                        <div class="mb-3">
+                            <h6 class="card-text"><u>Description:</u></h6>
+                            <p class="card-text">{{ game.description }}</p>
+                        </div>
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item" >{{ game.start_time }} - {{ game.end_time }}</li>
-                            <li class="list-group-item" >£{{ game.price }}</li>
+                            <li class="list-group-item" >Time: {{ game.start_time }} - {{ game.end_time }}</li>
+                            <li class="list-group-item" >Price: £{{ game.price }}</li>
                             <li class="list-group-item" >Pitch: {{ game.address }} {{ game.postcode }}</li>
+                            <li v-if="game.admin" class="list-group-item" >Admin: {{ game.admin.username }}</li>
                         </ul>
                     </div>
                 </div>
@@ -190,8 +194,10 @@
                         <label class="border p-2 rounded text-white bg-secondary" v-if="game.players ? game.players.length >= game.totalPlayers : ''">Game is full</label>
                         
                         <div class="mt-2">
-                            <button v-if="game.players ? !game.players.find(player => player.id == user.id) && game.players.length < game.totalPlayers : ''" @click="joinGame" class="btn btn-success">Join</button>
-                            <button v-if="game.players ? game.players.find(player => player.id == user.id) : ''" @click="leaveGame" class="btn btn-warning">Leave</button>
+                            <!-- <button v-if="game.players ? !game.players.find(player => player.id == user.id) && game.players.length < game.totalPlayers : ''" @click="joinGame" class="btn btn-success">Join</button> -->
+                            <button v-if="user && !isPlaying && game.players.length < game.totalPlayers" @click="joinGame" class="btn btn-success">Join</button>
+                            <!-- <button v-if="game.players ? game.players.find(player => player.id == user.id) : ''" @click="leaveGame" class="btn btn-warning">Leave</button> -->
+                            <button v-if="user && isPlaying" @click="leaveGame" class="btn btn-warning">Leave</button>
                         </div>
                         <button v-if="user && (user.id == game.admin.id && !game.fulltime)" class="btn btn-danger mt-4" @click="cancelGame">Cancel Game</button>
                     </div>
@@ -302,17 +308,9 @@ export default {
             credentials: 'include'
         })
         const data = await response.json()
-        // this.user = data.user
-        // this.user = store.user
         this.user = useUserStore().user
         this.game = data.game
         this.paid = data.paid
-
-        // if (this.game.is_private) {
-        //     if (!this.user.game_invites.some(invite => invite.game_id === this.game.id) && !this.game.players.some(player => player.id == this.user.id)) {
-        //         this.$router.push('/')
-        //     }
-        // }
 
         if (this.game.fulltime) {
             const response2 = await fetch(`http://localhost:8000/ratings/${this.id}`, {
@@ -480,20 +478,24 @@ export default {
         },
         async kickPlayer(player) {
             if (confirm(`Are you sure you want to kick ${player.username} from the game?`)) {
-                const response = await fetch(`http://localhost:8000/game/${this.id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        'kick' : player.id
-                    }) 
-                })
-    
-                const data = await response.json()
-                if (response.ok) {
-                    this.game = data.game
+                if (this.loading == false) {
+                    this.loading = true
+                    const response = await fetch(`http://localhost:8000/game/${this.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            'kick' : player.id
+                        }) 
+                    })
+        
+                    const data = await response.json()
+                    if (response.ok) {
+                        this.game = data.game
+                    }
+                    this.loading = false
                 }
             }
         },
@@ -518,20 +520,24 @@ export default {
         },
         async cancelGame() {
             if (confirm(`Are you sure you want to CANCEL this game?`)) {
-                const response = await fetch(`http://localhost:8000/game/${this.id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        'cancel_game' : true
-                    }) 
-                })
-    
-                const data = await response.json()
-                if (response.ok) {
-                    this.$router.push('/games')
+                if (this.loading == false) {
+                    this.loading = true
+                    const response = await fetch(`http://localhost:8000/game/${this.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            'cancel_game' : true
+                        }) 
+                    })
+        
+                    const data = await response.json()
+                    if (response.ok) {
+                        this.$router.push('/games')
+                    }
+                    this.loading = false
                 }
             }
         },
