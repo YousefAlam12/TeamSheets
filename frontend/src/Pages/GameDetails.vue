@@ -55,7 +55,7 @@
                     <button @click="fulltime" class="btn btn-info mt-3">Fulltime</button>
                 </div>
                 <!-- ------------------------------------------------------------------------------ -->
-                <div v-if="loading" class="d-flex justify-content-center w-100">
+                <div v-if="loading" class="d-flex justify-content-center w-100 mb-3">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
@@ -187,7 +187,7 @@
                     </table>
                 </div>
 
-                <div class="text-center d-flex flex-column align-items-center p-2 mb-2">
+                <div v-if="loading == false" class="text-center d-flex flex-column align-items-center p-2 mb-2">
                     <!-- <button v-if="!game.players.find(player => player.id == user.id)" @click="joinGame">Join</button> -->
                     <button v-if="paid == false" class="btn btn-success mb-2" @click="payGame">Pay</button>
                     <div v-if="!game.fulltime">
@@ -412,19 +412,21 @@ export default {
         },
         async fulltime() {
             if (confirm("Are you sure you want to call fulltime? This is irreversible.")) {
-                const response = await fetch(`http://localhost:8000/game/${this.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        'fulltime' : true
-                    }) 
-                })
-                const data = await response.json()
-                if (response.ok) {
-                    this.game = data.game
+                if (this.loading == false) {
+                    const response = await fetch(`http://localhost:8000/game/${this.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            'fulltime' : true
+                        }) 
+                    })
+                    const data = await response.json()
+                    if (response.ok) {
+                        this.game = data.game
+                    }
                 }
             }
 
