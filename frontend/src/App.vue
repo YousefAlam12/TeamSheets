@@ -3,6 +3,7 @@
         <nav v-if="!hideNavbar && store.user" class="navbar navbar-expand-lg navbar-light bg-light rounded"
             :class="{ 'expanded-navbar': isExpanded }">
             <div class="container-fluid">
+                <a class="navbar-brand">TeamSheets</a>
                 <!-- Navbar toggle button for mobile -->
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" :aria-expanded="isExpanded.toString()" aria-label="Toggle navigation"
@@ -19,6 +20,10 @@
                         exact-active-class="active" :to="{ name: 'Main' }">
                             Home
                         </router-link>
+                        
+                        <router-link class="nav-link" exact-active-class="active" :to="{ name: 'Games' }">
+                            Games
+                        </router-link>
 
                         <router-link
                             :class="{ 'nav-link': true, 'text-warning': store.user.received_requests != null && store.user.received_requests.length > 0}"
@@ -26,8 +31,8 @@
                             Friends List
                         </router-link>
 
-                        <router-link class="nav-link" exact-active-class="active" :to="{ name: 'Games' }">
-                            Games
+                        <router-link class="nav-link" exact-active-class="active" :to="{ name: 'Profile' }">
+                            Profile
                         </router-link>
 
                         <router-link class="nav-link" exact-active-class="active" :to="{ name: 'Logout' }">

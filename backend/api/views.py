@@ -311,7 +311,7 @@ def friends_api(request):
     if request.method != 'GET':
         JSON = json.loads(request.body)
         friend_request = FriendRequest.objects.get(from_user=JSON['from_user'], to_user=request.user)
-        to_user = User.objects.get(id=friend_request.to_user.id)
+        from_user = User.objects.get(id=friend_request.from_user.id)
 
         if request.method == 'POST':
             if friend_request.to_user == request.user:
@@ -323,8 +323,8 @@ def friends_api(request):
                 threading.Thread(
                     target=requestNotification, 
                     args=(
-                        f"Now friends with {to_user.username}",
-                        f"You are now friends with {to_user.username}. \n\n Check it out on TeamSheets.",
+                        f"Now friends with {request.user.username}",
+                        f"You are now friends with {request.user.username}. \n\n Check it out on TeamSheets.",
                         from_user.email)
                         ).start()
             else:
@@ -683,3 +683,45 @@ def requestNotification(subject, message, recipient):
         [recipient],
         fail_silently=False,
     )
+
+
+@login_required
+def profile_api(request):
+    user = request.user
+    
+    if request.method == 'PUT':
+        PUT = json.loads(request.body)
+
+        user.email = PUT['email']
+        user.postcode = PUT['postcode']
+        user.location = Point(PUT['longitude'], PUT['latitude'])
+
+        try:
+            user.full_clean()
+            user.save()
+        except ValidationError as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+    return JsonResponse({'user': request.user.as_dict(),
+                        'email': request.user.email,
+                        'postcode': request.user.postcode})
+
+
+@login_required
+def password_api(request):
+    user = request.user
+
+    if request.method == 'PUT':
+        PUT = json.loads(request.body)
+        print(PUT)
+        valid = authenticate(username=user.username, password=PUT['old'])
+        if valid is None or PUT['new'] == '':
+            print("invalid")
+            return JsonResponse({'error': 'error'}, status=400)
+        else:
+            print("valid")
+            user.set_password(PUT['new'])
+            user.save()
+            login(request, user)
+
+    return JsonResponse({'user': user.as_dict()})

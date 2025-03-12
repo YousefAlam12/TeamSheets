@@ -8,6 +8,7 @@ import Logout from '../Pages/Logout.vue'
 import GameDetails from '../Pages/GameDetails.vue'
 import FriendsList from '../Pages/FriendsList.vue'
 import { useUserStore } from '../stores/user'
+import Profile from '../Pages/Profile.vue'
 
 // let base = (import.meta.env.MODE == 'development') ? import.meta.env.BASE_URL : ''
 
@@ -21,6 +22,7 @@ const router = createRouter({
         {path: '/', name: 'Main', component: Main, meta: {auth: true}},
         {path: '/games', name: 'Games', component: Games, meta: {auth: true}},
         {path: '/friendsList', name: 'FriendsList', component: FriendsList, meta: {auth: true}},
+        {path: '/profile', name: 'Profile', component: Profile, meta: {auth: true}},
 
 
         {

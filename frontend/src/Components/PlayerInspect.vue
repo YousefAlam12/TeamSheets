@@ -12,7 +12,7 @@
 
                     <div class="mb-3">
                         <!-- <label v-if="player">{{ player.stats ? player.stats  : 'New player' }}</label> -->
-                        <label>{{ player.stats ? player.stats : 'New player' }}</label>
+                        <!-- <label>{{ player.stats ? player.stats : 'New player' }}</label> -->
                     </div>
 
                 </div>
