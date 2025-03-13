@@ -366,6 +366,9 @@ export default {
                     this.game = data.game
                     this.paid = null
                 }
+                if (this.game.is_private) {
+                    this.$router.push('/')
+                }
             }
         },
         async payGame() {

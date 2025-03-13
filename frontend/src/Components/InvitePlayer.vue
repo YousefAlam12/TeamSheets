@@ -70,9 +70,6 @@ export default {
     },
     methods: {
         async sendInvite(i, user) {
-            // this.user.friends[i].sendInvite = true
-            user.sendInvite = true
-
             const response = await fetch(`http://localhost:8000/gameInvite/${this.game.id}`, {
                 method: 'POST',
                 credentials: 'include',
@@ -83,6 +80,9 @@ export default {
                     'to_user': user.id
                 })
             })
+            if (response.ok) {
+                user.sendInvite = true
+            }
         }
     }
 }

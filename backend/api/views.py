@@ -694,11 +694,12 @@ def gameInvite(request, game_id):
     game = Game.objects.get(id=game_id)
     player = Player.objects.filter(user=request.user, game=game)
 
-    # only admin and players are allowed to invite in private games
-    if game.is_private and (not isAdmin(request.user, game)) and player.count() <= 0:
-        return JsonResponse({'user': 'Only players can invite'}, status=400)
 
     if request.method == 'POST':
+        # only admin and players are allowed to invite in private games
+        if game.is_private and (not isAdmin(request.user, game)) and player.count() <= 0:
+            return JsonResponse({'user': 'Only players can invite'}, status=400)
+        
         POST = json.loads(request.body)
         to_user = User.objects.get(id=POST['to_user'])
 
