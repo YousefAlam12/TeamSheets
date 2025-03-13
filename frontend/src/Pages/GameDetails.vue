@@ -308,9 +308,15 @@ export default {
             credentials: 'include'
         })
         const data = await response.json()
-        this.user = useUserStore().user
-        this.game = data.game
-        this.paid = data.paid
+        if (response.ok) {
+            this.user = useUserStore().user
+            this.game = data.game
+            this.paid = data.paid
+        }
+        // user is not allowed to view game
+        else {
+            this.$router.push('/')
+        }
 
         if (this.game.fulltime) {
             const response2 = await fetch(`http://localhost:8000/ratings/${this.id}`, {

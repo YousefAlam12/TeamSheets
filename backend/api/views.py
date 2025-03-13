@@ -81,8 +81,15 @@ class TeamBalancingProblem(Problem):
 
 @login_required
 def balanceTeams(request, game_id):
+    try:
+        game = Game.objects.get(id=game_id)
+    except:
+        return JsonResponse({'error': 'game does not exist'}, status=400)
+
+    if not isAdmin(request.user, game):
+        return JsonResponse({'error': 'only admin is allowed to do this'}, status=400)
+    
     players = Player.objects.filter(game=game_id).select_related('user')
-    game = Game.objects.get(id=game_id)
 
     player_settings = {
         12: (25, 60),
@@ -183,6 +190,12 @@ def test_api_view(request):
 
 
     x = Game.objects.get(id=2)
+    z = request.user.invite_to.filter(game=x)
+    print(z.count())
+
+    if not isAdmin(request.user, x):
+        return JsonResponse({'error': 'only admin is allowed to do this'}, status=400)
+    
     return JsonResponse({
         'user': request.user.as_dict(),
         'game': x.as_dict()
@@ -192,10 +205,15 @@ def test_api_view(request):
 
 def isAuthenticated(request):
     # checks to see if user is logged in to correctly restrict pages
-    isAuth = request.user.is_authenticated
-    print(isAuth)
-    print(request.user)
-    return JsonResponse({"isAuth": isAuth})
+    if request.user.is_authenticated:
+        return JsonResponse({"isAuth": True,
+                             'user': request.user.as_dict()})
+    else:
+        return JsonResponse({"isAuth": False})
+    # isAuth = request.user.is_authenticated
+    # print(isAuth)
+    # print(request.user)
+    # return JsonResponse({"isAuth": isAuth})
 
 
 def login_api(request):
@@ -272,12 +290,11 @@ def signup(request):
             return JsonResponse({'error': errorMsg}, status=400)
 
 
-# @login_required
-def user_api(request):
-    if request.user.is_authenticated:
-        return JsonResponse({'user': request.user.as_dict()})
-    else:
-        return JsonResponse({'error': 'not authenticated'})
+# def user_api(request):
+#     if request.user.is_authenticated:
+#         return JsonResponse({'user': request.user.as_dict()})
+#     else:
+#         return JsonResponse({'error': 'not authenticated'})
 
 
 @login_required
@@ -299,7 +316,7 @@ def send_friend_request(request):
                     ).start()
             return JsonResponse({'user': request.user.as_dict()})
         else:
-            return JsonResponse({'error': 'user does not exist'}, status=400)
+            return JsonResponse({'error': 'friend request already exists'}, status=400)
 
 
 @login_required
@@ -341,14 +358,14 @@ def friends_api(request):
                         })
 
 
-@login_required
-# returns all games in db
-def all_games_api(request):
-    if request.method == 'GET':
-        print('getting finished games...')
-        games = Game.objects.all()
-        data = [game.as_dict() for game in games]
-        return JsonResponse({'games': data})
+# @login_required
+# # returns all games in db
+# def all_games_api(request):
+#     if request.method == 'GET':
+#         print('getting finished games...')
+#         games = Game.objects.all()
+#         data = [game.as_dict() for game in games]
+#         return JsonResponse({'games': data})
 
 
 @login_required
@@ -367,9 +384,6 @@ def my_games_api(request):
         games = Game.objects.filter(
             fulltime=True, players=request.user).order_by('-date')
         played_games = [game.as_dict() for game in games]
-
-        # inbox = request.user.invite_to.all()
-        # inbox = [notif.as_dict() for notif in inbox]
 
         return JsonResponse({'myGames': myGames,
                              'adminGames': admin_games,
@@ -427,11 +441,30 @@ def games_api(request):
     return JsonResponse({'games': data})
 
 
+def isAdmin(user, game):
+    if user == game.admin:
+        return True
+    else:
+        return False
+
+
 @login_required
 # endpoint for a game, handles joining/leaving game and pay status
 def game_api(request, game_id):
-    game = Game.objects.get(id=game_id)
+    # checks if game exists
+    try:
+        game = Game.objects.get(id=game_id)
+    except:
+        return JsonResponse({'error': 'game does not exist'}, status=400)
+
     player = Player.objects.filter(user=request.user, game=game)
+    
+    # only allows admin and players of private game to view
+    if game.is_private and request.user != game.admin:
+        gameInvite = request.user.invite_to.filter(game=game)
+        if player.count() <= 0 and gameInvite.count() <= 0:
+            return JsonResponse({'error': 'user not allowed to view game'}, status=400)
+
 
     # checks if user is a player of the game
     if player.count() > 0:
@@ -439,6 +472,7 @@ def game_api(request, game_id):
         paid = player.paid
     else:
         paid = None
+        player = None
 
     if request.method == 'GET':
         return JsonResponse({
@@ -449,12 +483,12 @@ def game_api(request, game_id):
     # user joins game
     if request.method == 'POST':
         POST = json.loads(request.body)
-        print(POST)
 
         if POST.get('join'):
-            print('joining game')
-            player = Player(user=request.user, game=game)
-            player.save()
+
+            player, created = Player.objects.get_or_create(user=request.user, game=game)
+            if not created:
+                return JsonResponse({'error': "player already exists"}, status=400)
 
             # send email to subscribers
             threading.Thread(
@@ -474,11 +508,11 @@ def game_api(request, game_id):
     # DELETE methods for game
     if request.method == 'DELETE':
         DELETE = json.loads(request.body)
-        print(DELETE)
 
         if DELETE.get('leave'):
-            print('-------------------------------')
-            print('leaving game')
+            if player == None:
+                return JsonResponse({'error': "player does not exists"}, status=400)
+
             # send email to subscribers
             threading.Thread(
                 target=gameNotification, 
@@ -490,6 +524,10 @@ def game_api(request, game_id):
             player.delete()
         
         if DELETE.get('kick'):
+            # request only allowed if user is admin
+            if not isAdmin(request.user, game):
+                return JsonResponse({'error': 'only admin is allowed to do this'}, status=400)
+            
             player = Player.objects.get(user=DELETE['kick'], game=game)
             # send email to all players/subscribers
             gameNotification(
@@ -501,6 +539,10 @@ def game_api(request, game_id):
             player.delete()
 
         if DELETE.get('cancel_game'):
+            # request only allowed if user is admin
+            if not isAdmin(request.user, game):
+                return JsonResponse({'error': 'only admin is allowed to do this'}, status=400)
+
             # send email to all players/subscribers
             gameNotification(
                 game,
@@ -522,10 +564,17 @@ def game_api(request, game_id):
 
         # sets the pay status
         if PUT.get('paid'):
+            if player == None:
+                return JsonResponse({'error': "player does not exists"}, status=400)
+            
             player.paid = True
             player.save()
 
         if PUT.get('fulltime'):
+            # request only allowed if user is admin
+            if not isAdmin(request.user, game):
+                return JsonResponse({'error': 'only admin is allowed to do this'}, status=400)
+            
             game.fulltime = True
             game.save()
 
@@ -540,6 +589,10 @@ def game_api(request, game_id):
                     ).start()
 
         if PUT.get('toggle_privacy'):
+            # request only allowed if user is admin
+            if not isAdmin(request.user, game):
+                return JsonResponse({'error': 'only admin is allowed to do this'}, status=400)
+            
             game.is_private = not game.is_private
             game.save()
 
@@ -557,7 +610,14 @@ def game_api(request, game_id):
 @login_required
 # api for choosing teams in the game page
 def teams_api(request, game_id):
-    game = Game.objects.get(id=game_id)
+    try:
+        game = Game.objects.get(id=game_id)
+    except:
+        return JsonResponse({'error': 'game does not exist'}, status=400)
+
+    # only allows entry if user is the admin of the game
+    if not isAdmin(request.user, game):
+        return JsonResponse({'error': 'only admin is allowed to do this'}, status=400)
 
     if request.method == 'PUT':
         PUT = json.loads(request.body)
@@ -578,7 +638,17 @@ def teams_api(request, game_id):
 
 @login_required
 def ratings_api(request, game_id):
-    game = Game.objects.get(id=game_id)
+    try:
+        game = Game.objects.get(id=game_id)
+    except:
+        return JsonResponse({'error': 'game does not exist'}, status=400)
+    
+    isPlaying = Player.objects.filter(user=request.user, game=game)
+
+    # only entry if user actually played in game
+    if isPlaying.count() <= 0:
+        return JsonResponse({'error': 'Only players that played can rate'}, status=400)
+
     ratedPlayers = Rating.objects.filter(rater=request.user, game=game_id)
 
     if request.method == 'POST':
@@ -622,6 +692,11 @@ def ratings_api(request, game_id):
 @login_required
 def gameInvite(request, game_id):
     game = Game.objects.get(id=game_id)
+    player = Player.objects.filter(user=request.user, game=game)
+
+    # only admin and players are allowed to invite in private games
+    if game.is_private and (not isAdmin(request.user, game)) and player.count() <= 0:
+        return JsonResponse({'user': 'Only players can invite'}, status=400)
 
     if request.method == 'POST':
         POST = json.loads(request.body)

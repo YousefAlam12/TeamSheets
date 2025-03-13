@@ -55,9 +55,11 @@ export default {
     },
     async unmounted() {
         // Reset the sendInvite property for each friend when the component is unmounted
-        this.user.friends.forEach(friend => {
-            friend.sendInvite = false;
-        });
+        if (this.user) {
+            this.user.friends.forEach(friend => {
+                friend.sendInvite = false;
+            });
+        }
     },
     computed: {
         filteredFriends() {
@@ -68,7 +70,8 @@ export default {
     },
     methods: {
         async sendInvite(i, user) {
-            this.user.friends[i].sendInvite = true
+            // this.user.friends[i].sendInvite = true
+            user.sendInvite = true
 
             const response = await fetch(`http://localhost:8000/gameInvite/${this.game.id}`, {
                 method: 'POST',

@@ -100,31 +100,31 @@ export default {
         },
 
     },
-    watch: {
-        hideNavbar(newValue) {
-            if (!newValue) {
-                this.getUser()
-            }
-        }
-    },
+    // watch: {
+    //     hideNavbar(newValue) {
+    //         if (!newValue) {
+    //             this.getUser()
+    //         }
+    //     }
+    // },
     async mounted() {
-        if (!this.hideNavbar) {
-            this.getUser()
-        }
+        // if (!this.hideNavbar) {
+        //     this.getUser()
+        // }
     },
     methods: {
         toggleNavbar() {
             this.isExpanded = !this.isExpanded
         },
-        async getUser() {
-            const response = await fetch('http://localhost:8000/user', {
-                credentials: 'include'
-            })
-            const data = await response.json()
-            const store = useUserStore()
-            store.saveUser(data.user)
-            console.log('app store: ', store.user)
-        }
+        // async getUser() {
+        //     // const response = await fetch('http://localhost:8000/user', {
+        //     //     credentials: 'include'
+        //     // })
+        //     // const data = await response.json()
+        //     // const store = useUserStore()
+        //     // store.saveUser(data.user)
+        //     // console.log('app store: ', store.user)
+        // }
     }
 }
 </script>
