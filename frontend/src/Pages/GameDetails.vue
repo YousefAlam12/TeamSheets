@@ -366,7 +366,7 @@ export default {
                     this.game = data.game
                     this.paid = null
                 }
-                if (this.game.is_private) {
+                if (this.game.is_private && this.user.id != this.game.admin.id) {
                     this.$router.push('/')
                 }
             }

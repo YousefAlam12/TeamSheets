@@ -597,6 +597,11 @@ def game_api(request, game_id):
             game.save()
 
         if PUT.get('subscribe'):
+            # prevents invited users from subbing to private games when they are not a player
+            gameInvite = request.user.invite_to.filter(game=game)
+            if gameInvite.count() > 0 and game.is_private:
+                return JsonResponse({'error': 'only players can subscribe to a private game'}, status=400)
+            
             notification = Notification(game=game, user=request.user)
             notification.save()
             return JsonResponse({'user': request.user.as_dict()})
