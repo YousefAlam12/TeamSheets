@@ -124,6 +124,8 @@ export default {
             }
             else {
                 console.log(data.error)
+                this.longitude = null
+                this.latitude = null
             }
         },
     }
