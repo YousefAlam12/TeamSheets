@@ -441,6 +441,7 @@ def games_api(request):
     return JsonResponse({'games': data})
 
 
+# helper function for game admin checks
 def isAdmin(user, game):
     if user == game.admin:
         return True
