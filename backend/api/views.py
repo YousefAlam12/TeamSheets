@@ -460,7 +460,7 @@ def game_api(request, game_id):
 
     player = Player.objects.filter(user=request.user, game=game)
     
-    # only allows admin and players of private game to view
+    # only allows admin and players/invited of private game to view
     if game.is_private and request.user != game.admin:
         gameInvite = request.user.invite_to.filter(game=game)
         if player.count() <= 0 and gameInvite.count() <= 0:
@@ -523,6 +523,7 @@ def game_api(request, game_id):
                     f"{player.user.username} has now left {game.name} scheduled for: {game.date} from {game.start_time}-{game.end_time}.")
                     ).start()
             player.delete()
+            removeNotifications(user=request.user, game=game)
         
         if DELETE.get('kick'):
             # request only allowed if user is admin
@@ -538,6 +539,7 @@ def game_api(request, game_id):
                 kickEmail=player.user.email
             )
             player.delete()
+            removeNotifications(user=DELETE['kick'], game=game)
 
         if DELETE.get('cancel_game'):
             # request only allowed if user is admin
@@ -765,6 +767,14 @@ def requestNotification(subject, message, recipient):
         [recipient],
         fail_silently=False,
     )
+
+
+def removeNotifications(user, game):
+    notification = Notification.objects.filter(game=game, user=user)
+    if len(notification) > 0:
+        for notif in notification:
+            notif.delete()
+
 
 
 @login_required

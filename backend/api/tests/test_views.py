@@ -6,7 +6,7 @@ from datetime import date, time
 from django.contrib.gis.geos import Point
 from django.contrib.auth import authenticate
 
-
+# NOTE: exceptions are thrown due to email notifications but this can be ignored as tests still work
 class TestViews(TestCase):
 
     def setUp(self):
@@ -26,13 +26,24 @@ class TestViews(TestCase):
         # test games
         self.game1 = models.Game.objects.create(name="Game 1", date=date.today(), start_time=time(12, 0, 0), end_time=time(14, 0, 0), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user1, is_private=False, fulltime=False)
         self.game2 = models.Game.objects.create(name="Game 2", date=date.today(), start_time=time(12, 0, 0), end_time=time(14, 0, 0), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user2, is_private=False, fulltime=False)
+        self.privateGame = models.Game.objects.create(name="Game 2", date=date.today(), start_time=time(12, 0, 0), end_time=time(14, 0, 0), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user3, is_private=True, fulltime=False)
         self.fulltimeGame = models.Game.objects.create(name="Fulltime", date=date.today(), start_time=time(12, 0, 0), end_time=time(14, 0, 0), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user2, is_private=False, fulltime=True)
+
+        # GAME 1 test players
+        models.Player.objects.create(user=self.user2, game=self.game1)
 
         # GAME 2 test players
         models.Player.objects.create(user=self.user1, game=self.game2)
+        models.Player.objects.create(user=self.user2, game=self.game2)
 
         # FULLTIMEGAME test players
         models.Player.objects.create(user=self.user1, game=self.fulltimeGame)
+        
+        # PRIVATE GAME test players
+        models.Player.objects.create(user=self.user1, game=self.privateGame)
+
+        # Notification objects
+        models.Notification.objects.create(game=self.game2, user=self.user1)
         
 
 
@@ -249,7 +260,7 @@ class TestViews(TestCase):
         response = self.client.get(url)
         res = response.json()
 
-        self.assertEqual(len(res['myGames']), 1)
+        self.assertEqual(len(res['myGames']), 2)
         self.assertEqual(len(res['adminGames']), 1)
         self.assertEqual(len(res['playedGames']), 1)
 
@@ -264,23 +275,187 @@ class TestViews(TestCase):
         self.assertEqual(len(res['games']), 2)
 
 
-    # def test_games_POST(self):
-    #     url = reverse("Games")
-    #     self.client.login(username="user1", password="password1")
-    # 
-    #     response = self.createPOST(url, {
-    #         'name': "Test Game",
-    #         'date': date.today(),
-    #         'start_time': time(12, 0, 0),
-    #         'end_time': time(14, 0, 0),
-    #         'description': "testing 123.......",
-    #         'totalPlayers': 10,
-    #         'price': 5,
-    #         'address': "Fairlop Oaks Playing Fields, Forest Rd, Ilford",
-    #         'postcode': "IG6 3HX",
-    #         'longitude': 0.100324,
-    #         'latitude': 51.598645,
-    #         'is_private': False
-    #     })
-    #     res = response.json()
-    #     self.assertEqual()
+    def test_games_POST(self):
+        url = reverse("Games")
+        self.client.login(username="user1", password="password1")
+    
+        response = self.createPOST(url, {
+            'game' : {
+                'name': "Test Game",
+                'date': date.today(),
+                'start_time': "12:00",
+                'end_time': "14:00",
+                'description': "testing 123.......",
+                'totalPlayers': 10,
+                'price': 5,
+                'address': "Fairlop Oaks Playing Fields, Forest Rd, Ilford",
+                'postcode': "IG6 3HX",
+                'longitude': 0.100324,
+                'latitude': 51.598645,
+                'is_private': False
+            }
+        })
+        
+        # check if game was created and admin is a player
+        testGame = models.Game.objects.filter(name="Test Game")
+        player = models.Player.objects.filter(game=testGame[0])
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(testGame), 1)
+        self.assertEqual(len(player), 1)
+
+
+    def test_game_GET(self):
+        self.client.login(username="user1", password="password1")
+
+        # check for game that exists
+        url = reverse("Game_api", args=[1])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        
+        # check for game that does not exist
+        url = reverse("Game_api", args=[100])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 400)
+
+        # only admin and players should be able to view private game
+        url = reverse("Game_api", args=[3])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.client.logout()
+        self.client.login(username="user3", password="password1")
+        url = reverse("Game_api", args=[3])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        # user who is not player or admin of game should not be able to view
+        self.client.logout()
+        self.client.login(username="user2", password="password1")
+        url = reverse("Game_api", args=[3])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
+
+
+    def test_game_POST(self):
+        url = reverse("Game_api", args=[1])
+        self.client.login(username="user3", password="password1")
+
+        response = self.createPOST(url, {'join' : True})
+        player = models.Player.objects.filter(game=1, user=3)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(player), 1)
+
+
+    # DELETE methods for game_api
+    def test_game_LEAVE(self):
+        url = reverse("Game_api", args=[2])
+        self.client.login(username="user1", password="password1")
+
+        response = self.createDELETE(url, {'leave' : True})
+        player = models.Player.objects.filter(game=1, user=1)
+        notification = models.Notification.objects.filter(game=1, user=1)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(player), 0)
+        self.assertEqual(len(notification), 0)
+
+    
+    def test_game_KICK(self):
+        url = reverse("Game_api", args=[2])
+        self.client.login(username="user2", password="password1")
+
+        response = self.createDELETE(url, {'kick' : 1})
+        player = models.Player.objects.filter(game=2, user=1)
+        notification = models.Notification.objects.filter(game=1, user=1)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(player), 0)
+        self.assertEqual(len(notification), 0)
+
+
+    def test_game_CANCEL(self):
+        url = reverse("Game_api", args=[1])
+        self.client.login(username="user1", password="password1")
+
+        response = self.createDELETE(url, {'cancel_game' : True})
+        game = models.Game.objects.filter(id=1)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(game), 0)
+
+    
+    def test_game_UNSUBSCRIBE(self):
+        url = reverse("Game_api", args=[2])
+        self.client.login(username="user1", password="password1")
+
+        response = self.createDELETE(url, {'unsubscribe' : True})
+        notification = models.Notification.objects.filter(id=2)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(notification), 0)
+
+
+    # tests all PUT methods in game_api
+    def test_game_PUT(self):
+        # url is game where user is admin and bad_url is where it is not
+        url = reverse("Game_api", args=[2])
+        bad_url = reverse("Game_api", args=[1])
+        self.client.login(username="user2", password="password1")
+
+        # checks player paid status changes
+        response = self.createPUT(url, {'paid': True})
+        player = models.Player.objects.get(game=2, user=2)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(player.paid, True)
+
+        # checks game privacy changes (only admin)
+        response = self.createPUT(url, {'toggle_privacy': True})
+        bad_response = self.createPUT(bad_url, {'toggle_privacy': True})
+        game = models.Game.objects.get(id=2)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(bad_response.status_code, 400)
+        self.assertEqual(game.is_private, True)
+
+        # checks if notification object is created when user subscribes
+        response = self.createPUT(url, {'subscribe': True})
+        notification = models.Notification.objects.filter(game=game, user=2)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(notification), 1)
+
+        # checks game is set to fulltime (only admin)
+        response = self.createPUT(url, {'fulltime': True})
+        bad_response = self.createPUT(bad_url, {'fulltime': True})
+        game = models.Game.objects.get(id=2)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(bad_response.status_code, 400)
+        self.assertEqual(game.fulltime, True)
+
+
+    def test_game_teams(self):
+        url = reverse("Teams", args=[2])
+        bad_url = reverse("Teams", args=[1])
+        self.client.login(username="user2", password="password1")
+
+        # check only admin is allowed to set teams
+        response = self.createPUT(url, {
+            'player': 2,
+            'team': "A"
+        })
+        bad_response = self.createPUT(bad_url, {
+            'player': 2,
+            'team': "A"
+        })
+        player = models.Player.objects.get(game=2, user=2)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(bad_response.status_code, 400)
+        self.assertEqual(player.team, 'A')

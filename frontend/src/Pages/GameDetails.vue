@@ -365,6 +365,8 @@ export default {
                 if (response.ok) {
                     this.game = data.game
                     this.paid = null
+                    useUserStore().saveUser(data.user)
+                    this.user = useUserStore().user
                 }
                 if (this.game.is_private && this.user.id != this.game.admin.id) {
                     this.$router.push('/')
