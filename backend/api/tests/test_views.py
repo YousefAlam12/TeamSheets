@@ -38,13 +38,61 @@ class TestViews(TestCase):
 
         # FULLTIMEGAME test players
         models.Player.objects.create(user=self.user1, game=self.fulltimeGame)
+        models.Player.objects.create(user=self.user2, game=self.fulltimeGame)
+        models.Player.objects.create(user=self.user3, game=self.fulltimeGame)
         
         # PRIVATE GAME test players
         models.Player.objects.create(user=self.user1, game=self.privateGame)
 
         # Notification objects
         models.Notification.objects.create(game=self.game2, user=self.user1)
+
+        # Rating objects
+        models.Rating.objects.create(rater=self.user1, ratee=self.user2, game=self.fulltimeGame, attack=7, defence=3, strength=4, speed=7, technique=7)
+
+
+    # Setup Method for team balancing algorithm test
+    def team_balance_setup(self):
+        # create test users
+        for i in range(10):
+            models.User.objects.create_user(
+                first_name=f"player{i+1}", last_name="testing", username=f"p{i+1}", password="password1", email=f"p{i+1}@email.com", date_of_birth=date(2000, 1, 1), postcode="IG11 9BX", location=Point(0.105618, 51.549457)
+            )
+        p1 = models.User.objects.get(username="p1")
+        game = models.Game.objects.create(name="Team Balance Game", date=date.today(), start_time=time(12, 0, 0), end_time=time(14, 0, 0), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=p1, is_private=False, fulltime=False)
+
+        # create test players for test game
+        for i in range(10):
+            user = models.User.objects.get(username=f"p{i+1}")
+            models.Player.objects.create(user=user, game=game)
+
+        def getUser(username): return models.User.objects.get(username=username)
         
+        # creating ratings for test players
+        # models.Rating.objects.create(rater=self.user1, ratee=4, game=self.fulltimeGame, attack=9, defence=5, strength=7, speed=7, technique=5)
+        # models.Rating.objects.create(rater=self.user1, ratee=5, game=self.fulltimeGame, attack=3, defence=9, strength=9, speed=6, technique=6)
+        # models.Rating.objects.create(rater=self.user1, ratee=6, game=self.fulltimeGame, attack=7, defence=6, strength=4, speed=5, technique=8)
+        # models.Rating.objects.create(rater=self.user1, ratee=7, game=self.fulltimeGame, attack=4, defence=6, strength=7, speed=6, technique=2)
+        # models.Rating.objects.create(rater=self.user1, ratee=8, game=self.fulltimeGame, attack=2, defence=4, strength=5, speed=8, technique=2)
+        # models.Rating.objects.create(rater=self.user1, ratee=9, game=self.fulltimeGame, attack=2, defence=2, strength=5, speed=5, technique=4)
+        # models.Rating.objects.create(rater=self.user1, ratee=10, game=self.fulltimeGame, attack=4, defence=8, strength=5, speed=5, technique=9)
+        # models.Rating.objects.create(rater=self.user1, ratee=11, game=self.fulltimeGame, attack=5, defence=5, strength=4, speed=7, technique=6)
+        # models.Rating.objects.create(rater=self.user1, ratee=12, game=self.fulltimeGame, attack=7, defence=8, strength=6, speed=5, technique=7)
+        # models.Rating.objects.create(rater=self.user1, ratee=13, game=self.fulltimeGame, attack=5, defence=5, strength=5, speed=5, technique=5)
+        models.Rating.objects.create(rater=self.user1, ratee=getUser("p1"), game=self.fulltimeGame, attack=9, defence=5, strength=7, speed=7, technique=5)
+        models.Rating.objects.create(rater=self.user1, ratee=getUser("p2"), game=self.fulltimeGame, attack=3, defence=9, strength=9, speed=6, technique=6)
+        models.Rating.objects.create(rater=self.user1, ratee=getUser("p3"), game=self.fulltimeGame, attack=7, defence=6, strength=4, speed=5, technique=8)
+        models.Rating.objects.create(rater=self.user1, ratee=getUser("p4"), game=self.fulltimeGame, attack=4, defence=6, strength=7, speed=6, technique=2)
+        models.Rating.objects.create(rater=self.user1, ratee=getUser("p5"), game=self.fulltimeGame, attack=2, defence=4, strength=5, speed=8, technique=2)
+        models.Rating.objects.create(rater=self.user1, ratee=getUser("p6"), game=self.fulltimeGame, attack=2, defence=2, strength=5, speed=5, technique=4)
+        models.Rating.objects.create(rater=self.user1, ratee=getUser("p7"), game=self.fulltimeGame, attack=4, defence=8, strength=5, speed=5, technique=9)
+        models.Rating.objects.create(rater=self.user1, ratee=getUser("p8"), game=self.fulltimeGame, attack=5, defence=5, strength=4, speed=7, technique=6)
+        models.Rating.objects.create(rater=self.user1, ratee=getUser("p9"), game=self.fulltimeGame, attack=7, defence=8, strength=6, speed=5, technique=7)
+        models.Rating.objects.create(rater=self.user1, ratee=getUser("p10"), game=self.fulltimeGame, attack=5, defence=5, strength=5, speed=5, technique=5)
+
+
+        game = models.Game.objects.get(name="Team Balance Game")
+        return game
 
 
     def createPOST(self, url, data):
@@ -320,10 +368,9 @@ class TestViews(TestCase):
 
         self.assertEqual(response.status_code, 400)
 
-        # only admin and players should be able to view private game
+        # only admin and players/invited should be able to view private game
         url = reverse("Game_api", args=[3])
         response = self.client.get(url)
-
         self.assertEqual(response.status_code, 200)
 
         self.client.logout()
@@ -332,7 +379,7 @@ class TestViews(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
-        # user who is not player or admin of game should not be able to view
+        # user who is not player or admin of game should not be able to view private game
         self.client.logout()
         self.client.login(username="user2", password="password1")
         url = reverse("Game_api", args=[3])
@@ -440,7 +487,7 @@ class TestViews(TestCase):
         self.assertEqual(game.fulltime, True)
 
 
-    def test_game_teams(self):
+    def test_teams(self):
         url = reverse("Teams", args=[2])
         bad_url = reverse("Teams", args=[1])
         self.client.login(username="user2", password="password1")
@@ -459,3 +506,147 @@ class TestViews(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(bad_response.status_code, 400)
         self.assertEqual(player.team, 'A')
+
+        response = self.createPUT(url, {
+            'player': 2,
+            'team': "B"
+        })
+        player = models.Player.objects.get(game=2, user=2)
+        
+        self.assertEqual(player.team, 'B')
+
+
+    def test_ratings(self):
+        url = reverse("Ratings", args=[4])
+        self.client.login(username="user1", password="password1")
+
+        response = self.client.get(url)
+        res = response.json()
+
+        # checks that rated players are returned (user is included)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(res['ratedPlayers']), 2)
+
+        # checks that post creates new rating object
+        response = self.createPOST(url, {
+            'ratings': {
+                'attack': 4,
+                'defence': 7,
+                'strength': 7,
+                'speed': 5,
+                'technique': 5,
+            },
+            'player': 3
+        })
+        res = response.json()
+        rating = models.Rating.objects.filter(rater=self.user1, ratee=self.user3)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(res['ratedPlayers']), 3)
+        self.assertEqual(len(rating), 1)
+
+        # makes sure user is unable to rate a player already rated
+        response = self.createPOST(url, {
+            'ratings': {
+                'attack': 4,
+                'defence': 7,
+                'strength': 7,
+                'speed': 5,
+                'technique': 5,
+            },
+            'player': 3
+        })
+        rating = models.Rating.objects.filter(rater=self.user1, ratee=self.user3)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(len(res['ratedPlayers']), 3)
+        self.assertEqual(len(rating), 1)
+
+
+    def test_gameInvite(self):
+        url = reverse("Game Invite", args=[3])
+        self.client.login(username="user3", password="password1")
+
+        # POST method check 
+        response = self.createPOST(url, {'to_user' : 2})
+        invite = models.GameInvite.objects.filter(from_user=self.user3, to_user=2)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(invite), 1)        
+
+        # DELETE method check
+        self.client.logout()
+        self.client.login(username="user2", password="password1")
+
+        # Checks that invited player is able to view private game
+        game_url = reverse("Game_api", args=[3])
+        response = self.client.get(game_url)
+        self.assertEqual(response.status_code, 200)
+
+        response = self.createDELETE(url, {'game_invite' : 1})
+        invite = models.GameInvite.objects.filter(from_user=self.user3, to_user=2)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(invite), 0)
+
+        # When invite is canceled/cleared user should not be able to view private game
+        response = self.client.get(game_url)
+        self.assertEqual(response.status_code, 400)
+
+
+    def test_balanceTeams(self):
+        game = self.team_balance_setup()
+        url = reverse("Balance Teams", args=[game.id])
+
+        # checks that only admin can access api
+        self.client.login(username="p2", password="password1")
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 400)
+
+        # switch to admin 
+        self.client.logout()
+        self.client.login(username="p1", password="password1")
+        
+        ad_balance = []
+        skill_balance = []
+
+        # running team balance 3 times to find the average in the balance scores against different teams
+        for i in range(3):
+            response = self.client.get(url)
+            res = response.json()
+
+            self.assertEqual(response.status_code, 200)
+
+            # check to see stats of teams are balanced in accordance to the 2 objectives (attack/defence and skills)
+            A_attack = 0
+            A_defence = 0
+            A_skill = 0
+            
+            B_attack = 0
+            B_defence = 0
+            B_skill = 0
+
+            players = res['game']['players']
+            for p in players:
+                if p['team'] == "A":
+                    A_attack += p['stats']['attack']
+                    A_attack += p['stats']['defence']
+                    A_attack += (p['stats']['strength'] + p['stats']['speed'] + p['stats']['technique']) / 3
+
+                if p['team'] == "B":
+                    B_attack += p['stats']['attack']
+                    B_attack += p['stats']['defence']
+                    B_attack += (p['stats']['strength'] + p['stats']['speed'] + p['stats']['technique']) / 3
+
+            ad_diff = abs((A_attack + A_defence) - (B_attack + B_defence))
+            skill_diff = abs(A_skill - B_skill)
+
+            ad_balance.append(ad_diff)
+            skill_balance.append(skill_diff)
+
+        ad_test = sum(ad_balance) / len(ad_balance)
+        skill_test = sum(skill_balance) / len(skill_balance)
+
+        self.assertLessEqual(ad_test, 5)
+        self.assertLessEqual(skill_test, 5)

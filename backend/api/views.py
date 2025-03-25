@@ -713,6 +713,11 @@ def gameInvite(request, game_id):
 
         game_invite, created = GameInvite.objects.get_or_create(
             from_user=request.user, to_user=to_user, game=game)
+        
+        # Does not create if user is already a player in game
+        player_check = Player.objects.filter(user=to_user, game=game)
+        if len(player_check) > 0:
+            return JsonResponse({'error': 'User is already a player in the game'}, status=400) 
 
         # send an notification to the user being invited
         threading.Thread(
