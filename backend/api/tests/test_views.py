@@ -2,7 +2,8 @@ from django.test import TestCase, Client
 from api import models
 import json
 from django.urls import reverse
-from datetime import date, time
+from datetime import date, time, timedelta
+from django.utils import timezone
 from django.contrib.gis.geos import Point
 from django.contrib.auth import authenticate
 
@@ -24,10 +25,10 @@ class TestViews(TestCase):
         )
 
         # test games
-        self.game1 = models.Game.objects.create(name="Game 1", date=date.today(), start_time=time(12, 0, 0), end_time=time(14, 0, 0), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user1, is_private=False, fulltime=False)
-        self.game2 = models.Game.objects.create(name="Game 2", date=date.today(), start_time=time(12, 0, 0), end_time=time(14, 0, 0), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user2, is_private=False, fulltime=False)
-        self.privateGame = models.Game.objects.create(name="Game 2", date=date.today(), start_time=time(12, 0, 0), end_time=time(14, 0, 0), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user3, is_private=True, fulltime=False)
-        self.fulltimeGame = models.Game.objects.create(name="Fulltime", date=date.today(), start_time=time(12, 0, 0), end_time=time(14, 0, 0), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user2, is_private=False, fulltime=True)
+        self.game1 = models.Game.objects.create(name="Game 1", date=date.today(), start_time=timezone.now(), end_time=(timezone.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user1, is_private=False, fulltime=False)
+        self.game2 = models.Game.objects.create(name="Game 2", date=date.today(), start_time=timezone.now(), end_time=(timezone.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user2, is_private=False, fulltime=False)
+        self.privateGame = models.Game.objects.create(name="Game 2", date=date.today(), start_time=timezone.now(), end_time=(timezone.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user3, is_private=True, fulltime=False)
+        self.fulltimeGame = models.Game.objects.create(name="Fulltime", date=date.today(), start_time=(timezone.now() - timedelta(hours=1)), end_time=timezone.now(), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user2, is_private=False, fulltime=True)
 
         # GAME 1 test players
         models.Player.objects.create(user=self.user2, game=self.game1)
@@ -69,16 +70,6 @@ class TestViews(TestCase):
         def getUser(username): return models.User.objects.get(username=username)
         
         # creating ratings for test players
-        # models.Rating.objects.create(rater=self.user1, ratee=4, game=self.fulltimeGame, attack=9, defence=5, strength=7, speed=7, technique=5)
-        # models.Rating.objects.create(rater=self.user1, ratee=5, game=self.fulltimeGame, attack=3, defence=9, strength=9, speed=6, technique=6)
-        # models.Rating.objects.create(rater=self.user1, ratee=6, game=self.fulltimeGame, attack=7, defence=6, strength=4, speed=5, technique=8)
-        # models.Rating.objects.create(rater=self.user1, ratee=7, game=self.fulltimeGame, attack=4, defence=6, strength=7, speed=6, technique=2)
-        # models.Rating.objects.create(rater=self.user1, ratee=8, game=self.fulltimeGame, attack=2, defence=4, strength=5, speed=8, technique=2)
-        # models.Rating.objects.create(rater=self.user1, ratee=9, game=self.fulltimeGame, attack=2, defence=2, strength=5, speed=5, technique=4)
-        # models.Rating.objects.create(rater=self.user1, ratee=10, game=self.fulltimeGame, attack=4, defence=8, strength=5, speed=5, technique=9)
-        # models.Rating.objects.create(rater=self.user1, ratee=11, game=self.fulltimeGame, attack=5, defence=5, strength=4, speed=7, technique=6)
-        # models.Rating.objects.create(rater=self.user1, ratee=12, game=self.fulltimeGame, attack=7, defence=8, strength=6, speed=5, technique=7)
-        # models.Rating.objects.create(rater=self.user1, ratee=13, game=self.fulltimeGame, attack=5, defence=5, strength=5, speed=5, technique=5)
         models.Rating.objects.create(rater=self.user1, ratee=getUser("p1"), game=self.fulltimeGame, attack=9, defence=5, strength=7, speed=7, technique=5)
         models.Rating.objects.create(rater=self.user1, ratee=getUser("p2"), game=self.fulltimeGame, attack=3, defence=9, strength=9, speed=6, technique=6)
         models.Rating.objects.create(rater=self.user1, ratee=getUser("p3"), game=self.fulltimeGame, attack=7, defence=6, strength=4, speed=5, technique=8)

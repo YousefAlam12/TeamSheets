@@ -9,6 +9,7 @@
                 <div>
                     {{ game.date }}
                     <span v-if="game.fulltime" class="badge bg-warning">Fulltime</span>
+                    <span v-if="isFinished(game)" class="badge bg-danger"> Call Fulltime</span>
                     <span v-if="isPlaying(game)" class="badge bg-success">Playing</span>
                 </div>
 
@@ -34,17 +35,15 @@ export default {
     props: {
         games: {
             type: Array,
-            required: true
         },
         user_id: {}
     },
     computed: {
         isEmpty() {
-            if (this.games) {
-                return this.games.length <= 0
+            if (this.games == null) {
+                return true
             }
-        },
-        
+        },        
     },
     data() {
         return {
@@ -57,6 +56,13 @@ export default {
         isPlaying(game) {
             if (this.user_id) {
                 return game.players.find(player => player.id == this.user_id)
+            }
+        },
+        isFinished(game) {
+            if (!game.fulltime) {
+                const now = new Date()
+                const game_date = new Date(`${game.date}T${game.end_time}`)
+                return game_date < now   
             }
         }
     }

@@ -372,10 +372,10 @@ def friends_api(request):
 # returns games which current user is in
 def my_games_api(request):
     if request.method == 'GET':
-        today = datetime.datetime.today().date()
+        today = datetime.datetime.now()
 
         games = Game.objects.filter(
-            fulltime=False, players=request.user, date__gte=today).order_by('date')
+            fulltime=False, players=request.user, date__gte=today, end_time__gte=today.time()).order_by('date')
         myGames = [game.as_dict() for game in games]
 
         games = Game.objects.filter(admin=request.user).order_by('-date')
@@ -432,12 +432,14 @@ def games_api(request):
         )
         newPlayer.save()
 
-    today = datetime.datetime.today().date()
     # games = Game.objects.filter(fulltime=False, date__gte=today).order_by('date')
     # orders games by distance from user
+    today = datetime.datetime.now()
     games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(
-        fulltime=False, is_private=False, date__gte=today).order_by('distance', 'date')
+        fulltime=False, is_private=False, date__gte=today.date(), end_time__gte=today.time()).order_by('distance', 'date')
     data = [game.as_dict() for game in games]
+    if len(data) <= 0:
+        data = None
     return JsonResponse({'games': data})
 
 
