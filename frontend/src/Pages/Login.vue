@@ -1,6 +1,6 @@
 <template>
     <div class="container d-flex justify-content-center align-items-center">
-        <div class="card shadow" style="max-width: 600px; width: 100%; margin-top: 25%;">
+        <div class="card shadow" style="max-width: 600px; width: 100%; margin-top: 35%;">
             <div class="card-body">
                 <h2 class="card-title text-center mb-4">Login</h2>
                 <form @submit.prevent="login">
