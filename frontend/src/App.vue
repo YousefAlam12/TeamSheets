@@ -161,4 +161,26 @@ export default {
     font-weight: bold;
     border-bottom: solid blue;
 }
+
+@media (min-width: 1600px) {
+    .container {
+        max-width: 1520px;
+    }
+}
+
+@media (min-width: 1800px) {
+    .container {
+        max-width: 1700px;
+    }
+}
+@media (min-width: 2000px) {
+    .container {
+        max-width: 2000px;
+    }
+}
+@media (min-width: 2500px) {
+    .container {
+        max-width: 2500px;
+    }
+}
 </style>
