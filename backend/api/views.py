@@ -21,6 +21,7 @@ from .models import User, Game, Player, Rating, FriendRequest, GameInvite, Notif
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
+from django.db.models import Q
 
 from django.core.mail import send_mail
 from django.conf import settings
@@ -375,7 +376,7 @@ def my_games_api(request):
         today = datetime.datetime.now()
 
         games = Game.objects.filter(
-            fulltime=False, players=request.user, date__gte=today, end_time__gte=today.time()).order_by('date')
+            Q(date__gt=today) | Q(date=today.date()) & Q(end_time__gte=today.time()), fulltime=False, players=request.user).order_by('date')
         myGames = [game.as_dict() for game in games]
 
         games = Game.objects.filter(admin=request.user).order_by('-date')
@@ -436,7 +437,13 @@ def games_api(request):
     # orders games by distance from user
     today = datetime.datetime.now()
     games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(
-        fulltime=False, is_private=False, date__gte=today.date(), end_time__gte=today.time()).order_by('distance', 'date')
+        Q(date__gt=today) | Q(date=today.date()) & Q(end_time__gte=today.time()), fulltime=False, is_private=False).order_by('distance', 'date')
+
+    # games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(
+    #     fulltime=False, is_private=False, date__gte=today.date()).order_by('distance', 'date')
+    
+    # games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(
+    #     fulltime=False, is_private=False, date__gte=today.date(), end_time__gte=today.time()).order_by('distance', 'date')
     data = [game.as_dict() for game in games]
     if len(data) <= 0:
         data = None
@@ -610,6 +617,14 @@ def game_api(request, game_id):
             notification = Notification(game=game, user=request.user)
             notification.save()
             return JsonResponse({'user': request.user.as_dict()})
+        
+        if PUT.get('description'):
+            # request only allowed if user is admin
+            if not isAdmin(request.user, game):
+                return JsonResponse({'error': 'only admin is allowed to do this'}, status=400)
+            
+            game.description = PUT.get('description')
+            game.save()
 
     # sends the game and pay status as dict to update the page
     return JsonResponse({'game': game.as_dict(),

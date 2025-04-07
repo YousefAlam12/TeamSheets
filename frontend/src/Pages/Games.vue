@@ -7,6 +7,9 @@
             <div class="alert alert-danger mt-3" role="alert" v-if="errorMessage">
                 {{ errorMessage }}
             </div>
+            <div class="alert alert-success mt-3" role="alert" v-if="successMessage">
+                {{ successMessage }}
+            </div>
 
             <div class="d-flex">
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
@@ -33,22 +36,34 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="name" class="form-label">Name</label>
-                            <input v-model="newGame.name" type="text" class="form-control" id="name">
+                            <div class="input-group">
+                                <input v-model="newGame.name" type="text" class="form-control" id="name">
+                                <span class="input-group-text"><i class="bi bi-exclamation-circle"></i></span>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="date" class="form-label">Date</label>
-                            <input v-model="newGame.date" type="date" class="form-control" id="date">
+                            <div class="input-group">
+                                <input v-model="newGame.date" type="date" class="form-control" id="date">
+                                <span class="input-group-text"><i class="bi bi-exclamation-circle"></i></span>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="start-time" class="form-label">Start Time</label>
-                            <input v-model="newGame.start_time" type="time" class="form-control" id="start-time">
+                            <div class="input-group">
+                                <input v-model="newGame.start_time" type="time" class="form-control" id="start-time">
+                                <span class="input-group-text"><i class="bi bi-exclamation-circle"></i></span>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="end-time" class="form-label">End Time</label>
-                            <input v-model="newGame.end_time" type="time" class="form-control" id="end-time">
+                            <div class="input-group">
+                                <input v-model="newGame.end_time" type="time" class="form-control" id="end-time">
+                                <span class="input-group-text"><i class="bi bi-exclamation-circle"></i></span>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -57,23 +72,35 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="total-players" class="form-label">Total Players</label>
-                            <input v-model="newGame.totalPlayers" type="number" class="form-control" id="total-players" min="10" max="22">
+                            <label for="total-players" class="form-label">Total Players</label> <i class="bi bi-info-circle" data-toggle="tooltip" data-placement="top" title="Must be even and between 10-22 (11-5 aside)"></i>
+                            <div class="input-group">
+                                <input v-model="newGame.totalPlayers" type="number" class="form-control" id="total-players" min="10" max="22">
+                                <span class="input-group-text"><i class="bi bi-exclamation-circle"></i></span>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="price" class="form-label">Price</label>
-                            <input v-model="newGame.price" type="number" class="form-control" id="price" min="0">
+                            <div class="input-group">
+                                <input v-model="newGame.price" type="number" class="form-control" id="price" min="0">
+                                <span class="input-group-text"><i class="bi bi-exclamation-circle"></i></span>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="address" class="form-label">Pitch Address</label>
-                            <input v-model="newGame.address" type="text" class="form-control" id="address">
+                            <div class="input-group">
+                                <input v-model="newGame.address" type="text" class="form-control" id="address">
+                                <span class="input-group-text"><i class="bi bi-exclamation-circle"></i></span>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="postcode" class="form-label">Postcode</label>
-                            <input v-model="newGame.postcode" type="text" class="form-control" id="postcode">
+                            <div class="input-group">
+                                <input v-model="newGame.postcode" type="text" class="form-control" id="postcode">
+                                <span class="input-group-text"><i class="bi bi-exclamation-circle"></i></span>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -156,6 +183,7 @@ export default {
                 is_private: false
             },
             errorMessage : '',
+            successMessage : '',
             shownGames : [],
             filter : {
                 date: null,
@@ -205,6 +233,7 @@ export default {
             const data = await response.json()
             if (response.ok) {
                 console.log(data)
+                this.successMessage = `${this.newGame.name} was successfully created`
                 this.resetNewGame()
                 this.games = data.games
                 this.shownGames = data.games

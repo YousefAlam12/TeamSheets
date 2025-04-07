@@ -32,8 +32,11 @@
                     </h5>
                     <div class="border rounded bg-info p-2">
                         <div class="mb-3">
-                            <h6 class="card-text"><u>Description:</u></h6>
-                            <p class="card-text">{{ game.description }}</p>
+                            <h6 class="card-text"><u>Description:</u> 
+                                <button v-if="user && game && (user.id == game.admin.id && !game.fulltime)" class="btn btn-info btn-sm" @click="changeDescription = game.description"><i class="bi bi-pencil-square" data-bs-toggle="modal" data-bs-target="#descriptionModal"></i></button>
+                            </h6>
+                            <!-- <p class="card-text">{{ game.description }}</p> -->
+                            <p class="card-text" v-html="formatText(game.description)"></p>
                         </div>
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item" >Time: {{ game.start_time }} - {{ game.end_time }}</li>
@@ -257,6 +260,29 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Edit Description Modal -->
+        <div class="modal fade" id="descriptionModal" tabindex="-1" aria-labelledby="descriptionModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="descriptionModalLabel">Edit Description</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea v-model="changeDescription" name="description" id="description" class="form-control"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="editDescription">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
 </template>
@@ -300,7 +326,8 @@ export default {
                 speed: null,
                 technique: null,
             },
-            error: ''
+            error: '',
+            changeDescription: null
         }
     },
     async mounted() {
@@ -588,6 +615,27 @@ export default {
                 this.user = useUserStore().user
             }
         },
+        async editDescription() {
+            const response = await fetch(`http://localhost:8000/game/${this.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    'description': this.changeDescription
+                })
+            })
+            const data = await response.json()
+            if (response.ok) {
+                this.game = data.game
+            }
+        },
+        formatText(text) {
+            if (typeof text === 'string') {
+                return text.replace(/\n/g, '<br>')
+            }
+        }
     }
 }
 </script>

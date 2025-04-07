@@ -2,8 +2,7 @@ from django.test import TestCase, Client
 from api import models
 import json
 from django.urls import reverse
-from datetime import date, time, timedelta
-from django.utils import timezone
+from datetime import date, time, timedelta, datetime
 from django.contrib.gis.geos import Point
 from django.contrib.auth import authenticate
 
@@ -25,10 +24,10 @@ class TestViews(TestCase):
         )
 
         # test games
-        self.game1 = models.Game.objects.create(name="Game 1", date=date.today(), start_time=timezone.now(), end_time=(timezone.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user1, is_private=False, fulltime=False)
-        self.game2 = models.Game.objects.create(name="Game 2", date=date.today(), start_time=timezone.now(), end_time=(timezone.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user2, is_private=False, fulltime=False)
-        self.privateGame = models.Game.objects.create(name="Game 2", date=date.today(), start_time=timezone.now(), end_time=(timezone.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user3, is_private=True, fulltime=False)
-        self.fulltimeGame = models.Game.objects.create(name="Fulltime", date=date.today(), start_time=(timezone.now() - timedelta(hours=1)), end_time=timezone.now(), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user2, is_private=False, fulltime=True)
+        self.game1 = models.Game.objects.create(name="Game 1", date=date.today(), start_time=datetime.now(), end_time=(datetime.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user1, is_private=False, fulltime=False)
+        self.game2 = models.Game.objects.create(name="Game 2", date=date.today(), start_time=datetime.now(), end_time=(datetime.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user2, is_private=False, fulltime=False)
+        self.privateGame = models.Game.objects.create(name="Game 2", date=date.today(), start_time=datetime.now(), end_time=(datetime.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user3, is_private=True, fulltime=False)
+        self.fulltimeGame = models.Game.objects.create(name="Fulltime", date=date.today(), start_time=(datetime.now() - timedelta(hours=1)), end_time=datetime.now(), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user2, is_private=False, fulltime=True)
 
         # GAME 1 test players
         models.Player.objects.create(user=self.user2, game=self.game1)
@@ -460,6 +459,15 @@ class TestViews(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(bad_response.status_code, 400)
         self.assertEqual(game.is_private, True)
+
+        # checks if description is changed
+        response = self.createPUT(url, {'description': "changing description"})
+        bad_response = self.createPUT(bad_url, {'description': "changing description"})
+        game = models.Game.objects.get(id=2)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(bad_response.status_code, 400)
+        self.assertEqual(game.description, "changing description")
 
         # checks if notification object is created when user subscribes
         response = self.createPUT(url, {'subscribe': True})
