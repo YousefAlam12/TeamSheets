@@ -240,6 +240,7 @@ export default {
             }
             else {
                 this.errorMessage = data.error
+                this.successMessage = ''
                 // this.errorMessage = 'Invalid details'
             }
         },

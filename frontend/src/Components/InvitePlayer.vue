@@ -17,8 +17,22 @@
                             for="userSearch">
                         <ul class="overflow-auto list-group">
                             <li v-for="(u, index) in filteredFriends"
-                                class="d-flex list-group-item justify-content-between p-3">
-                                <label class="align-content-center">{{ u.username }}</label>
+                                class="d-flex list-group-item justify-content-between align-items-center p-3">
+                                <div class="d-flex align-items-start flex-column">
+                                    <label class="align-content-center">{{ u.username }}</label>
+                                    <small class="form-text text-muted">
+                                        <div v-if="u.stats" class="d-flex flex-row bd-highlight">
+                                            <div class="pe-2 bd-highlight">atk: {{ u.stats.attack }}</div>
+                                            <div class="pe-2 bd-highlight">def: {{ u.stats.defence }}</div>
+                                            <div class="pe-2 bd-highlight">str: {{ u.stats.strength }}</div>
+                                            <div class="pe-2 bd-highlight">spd: {{ u.stats.speed }}</div>
+                                            <div class="pe-2 bd-highlight">teq: {{ u.stats.technique }}</div>
+                                        </div>
+                                        <div v-else class="d-flex flex-row bd-highlight">
+                                            <div class="pe-2 bd-highlight">New Player</div>
+                                        </div>
+                                    </small>
+                                </div>
                                 <div>
                                     <button class="btn btn-primary" v-if="game.players ? game.players.find(player => player.id == u.id) : ''">In Game</button>
                                     <button v-else class="btn btn-success" :class="{ 'btn btn-warning': u.sendInvite }"
