@@ -6,7 +6,7 @@ from datetime import date, time, timedelta, datetime
 from django.contrib.gis.geos import Point
 from django.contrib.auth import authenticate
 
-# NOTE: exceptions are thrown due to email notifications but this can be ignored as tests still work
+# NOTE: exceptions are thrown due to email notifications being locked but this can be ignored as tests still work
 class TestViews(TestCase):
 
     def setUp(self):
@@ -24,8 +24,8 @@ class TestViews(TestCase):
         )
 
         # test games
-        self.game1 = models.Game.objects.create(name="Game 1", date=date.today(), start_time=datetime.now(), end_time=(datetime.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user1, is_private=False, fulltime=False)
-        self.game2 = models.Game.objects.create(name="Game 2", date=date.today(), start_time=datetime.now(), end_time=(datetime.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user2, is_private=False, fulltime=False)
+        self.game1 = models.Game.objects.create(name="Game 1", date=date.today(), start_time=datetime.now(), end_time=(datetime.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user1, is_private=False, fulltime=False)
+        self.game2 = models.Game.objects.create(name="Game 2", date=date.today(), start_time=datetime.now(), end_time=(datetime.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user2, is_private=False, fulltime=False)
         self.privateGame = models.Game.objects.create(name="Game 2", date=date.today(), start_time=datetime.now(), end_time=(datetime.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user3, is_private=True, fulltime=False)
         self.fulltimeGame = models.Game.objects.create(name="Fulltime", date=date.today(), start_time=(datetime.now() - timedelta(hours=1)), end_time=datetime.now(), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user2, is_private=False, fulltime=True)
 
@@ -311,6 +311,9 @@ class TestViews(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(res['games']), 2)
+
+        # checks it displays games based on location 
+        self.assertEqual(res['games'][0].get('name'), "Game 2")
 
 
     def test_games_POST(self):
@@ -630,13 +633,13 @@ class TestViews(TestCase):
             for p in players:
                 if p['team'] == "A":
                     A_attack += p['stats']['attack']
-                    A_attack += p['stats']['defence']
-                    A_attack += (p['stats']['strength'] + p['stats']['speed'] + p['stats']['technique']) / 3
+                    A_defence += p['stats']['defence']
+                    A_skill += (p['stats']['strength'] + p['stats']['speed'] + p['stats']['technique']) / 3
 
                 if p['team'] == "B":
                     B_attack += p['stats']['attack']
-                    B_attack += p['stats']['defence']
-                    B_attack += (p['stats']['strength'] + p['stats']['speed'] + p['stats']['technique']) / 3
+                    B_defence += p['stats']['defence']
+                    B_skill += (p['stats']['strength'] + p['stats']['speed'] + p['stats']['technique']) / 3
 
             ad_diff = abs((A_attack + A_defence) - (B_attack + B_defence))
             skill_diff = abs(A_skill - B_skill)
@@ -647,5 +650,6 @@ class TestViews(TestCase):
         ad_test = sum(ad_balance) / len(ad_balance)
         skill_test = sum(skill_balance) / len(skill_balance)
 
+        # checks the average balance score is within threshold/reason
         self.assertLessEqual(ad_test, 5)
         self.assertLessEqual(skill_test, 5)

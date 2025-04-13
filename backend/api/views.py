@@ -145,13 +145,6 @@ def balanceTeams(request, game_id):
 
         players[i].save()
 
-    print('===Team A===')
-    print(teamA)
-
-    print('\n===Team B===')
-    print(teamB)
-
-    # game = Game.objects.get(id=game_id)
     return JsonResponse({'game': game.as_dict()})
 
 ###############################################################################################
