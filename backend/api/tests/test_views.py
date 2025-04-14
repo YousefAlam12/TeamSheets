@@ -30,7 +30,7 @@ class TestViews(TestCase):
         self.fulltimeGame = models.Game.objects.create(name="Fulltime", date=date.today(), start_time=(datetime.now() - timedelta(hours=1)), end_time=datetime.now(), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user2, is_private=False, fulltime=True)
 
         # GAME 1 test players
-        models.Player.objects.create(user=self.user2, game=self.game1)
+        models.Player.objects.create(user=self.user3, game=self.game1)
 
         # GAME 2 test players
         models.Player.objects.create(user=self.user1, game=self.game2)
@@ -382,7 +382,7 @@ class TestViews(TestCase):
 
     def test_game_POST(self):
         url = reverse("Game_api", args=[1])
-        self.client.login(username="user3", password="password1")
+        self.client.login(username="user2", password="password1")
 
         response = self.createPOST(url, {'join' : True})
         player = models.Player.objects.filter(game=1, user=3)
@@ -566,35 +566,44 @@ class TestViews(TestCase):
 
 
     def test_gameInvite(self):
-        url = reverse("Game Invite", args=[3])
+        private_url = reverse("Game Invite", args=[3])
+        public_url = reverse("Game Invite", args=[1])
         self.client.login(username="user3", password="password1")
 
         # Sending invite method check (POST)
-        response = self.createPOST(url, {'to_user' : 2})
+        private_response = self.createPOST(private_url, {'to_user' : 2})
+        public_response = self.createPOST(public_url, {'to_user' : 2})
         invite = models.GameInvite.objects.filter(from_user=self.user3, to_user=2)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(invite), 1)        
+        self.assertEqual(private_response.status_code, 200)
+        self.assertEqual(public_response.status_code, 200)
+        self.assertEqual(len(invite), 2)        
 
         # Change user to handle invite
         self.client.logout()
         self.client.login(username="user2", password="password1")
 
         # Checks that invited player is able to view private game
-        game_url = reverse("Game_api", args=[3])
-        response = self.client.get(game_url)
+        publicGame_url = reverse("Game_api", args=[1])
+        privateGame_url = reverse("Game_api", args=[3])
+        response = self.client.get(privateGame_url)
         self.assertEqual(response.status_code, 200)
 
         # Checks cancelling game invitation (DELETE)
-        response = self.createDELETE(url, {'game_invite' : 1})
+        response = self.createDELETE(private_url, {'game_invite' : 1})
+        response = self.createDELETE(public_url, {'game_invite' : 2})
         invite = models.GameInvite.objects.filter(from_user=self.user3, to_user=2)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(invite), 0)
 
-        # When invite is canceled/cleared user should not be able to view private game
-        response = self.client.get(game_url)
+        # When invite is canceled/cleared user should be able to view public game but not private
+        response = self.client.get(privateGame_url)
         self.assertEqual(response.status_code, 400)
+        
+        response = self.client.get(publicGame_url)
+        self.assertEqual(response.status_code, 200)
+
 
 
     def test_balanceTeams(self):
