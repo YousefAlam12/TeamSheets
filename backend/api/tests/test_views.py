@@ -569,14 +569,14 @@ class TestViews(TestCase):
         url = reverse("Game Invite", args=[3])
         self.client.login(username="user3", password="password1")
 
-        # POST method check 
+        # Sending invite method check (POST)
         response = self.createPOST(url, {'to_user' : 2})
         invite = models.GameInvite.objects.filter(from_user=self.user3, to_user=2)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(invite), 1)        
 
-        # DELETE method check
+        # Change user to handle invite
         self.client.logout()
         self.client.login(username="user2", password="password1")
 
@@ -585,6 +585,7 @@ class TestViews(TestCase):
         response = self.client.get(game_url)
         self.assertEqual(response.status_code, 200)
 
+        # Checks cancelling game invitation (DELETE)
         response = self.createDELETE(url, {'game_invite' : 1})
         invite = models.GameInvite.objects.filter(from_user=self.user3, to_user=2)
 
