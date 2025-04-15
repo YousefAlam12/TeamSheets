@@ -139,7 +139,7 @@
                                         </small>
                                     </div>
 
-                                    <div v-if="user.id == game.admin.id && !game.fulltime">
+                                    <div class="d-flex align-items-center" v-if="user.id == game.admin.id && !game.fulltime">
                                         <button class="btn btn-sm btn-primary" @click="changeTeam(player, 'A')">A</button>
                                         <button class="btn btn-sm btn-danger" @click="changeTeam(player, 'B')">B</button>
                                     </div>
@@ -494,6 +494,7 @@ export default {
             if (response.ok) {
                 this.game = data.game
                 this.ratedPlayers = data.ratedPlayers
+                this.error = ''
             }
             else {
                 this.error = data.error

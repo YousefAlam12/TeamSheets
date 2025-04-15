@@ -44,9 +44,6 @@ class TestViews(TestCase):
         # PRIVATE GAME test players
         models.Player.objects.create(user=self.user1, game=self.privateGame)
 
-        # Notification objects
-        models.Notification.objects.create(game=self.game2, user=self.user1)
-
         # Rating objects
         models.Rating.objects.create(rater=self.user1, ratee=self.user2, game=self.fulltimeGame, attack=7, defence=3, strength=4, speed=7, technique=7)
 
@@ -179,7 +176,7 @@ class TestViews(TestCase):
 
         # should return response with list of all users and user as dictionary
         self.assertIsNotNone(res.get('user'))
-        self.assertGreaterEqual(len(res.get('userList')), 1)
+        self.assertEqual(len(res.get('userList')), 2)
 
 
     def test_friends_Accept(self):
@@ -429,30 +426,42 @@ class TestViews(TestCase):
         self.assertEqual(len(game), 0)
 
     
-    def test_game_UNSUBSCRIBE(self):
+    # Checks game subcription toggle
+    def test_game_SUBSCRIBE(self):
         url = reverse("Game_api", args=[2])
+        game = models.Game.objects.get(id=2)
         self.client.login(username="user1", password="password1")
 
+        # checks subscribing
+        response = self.createPUT(url, {'subscribe' : True})
+        notification = models.Notification.objects.filter(game=game)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(notification), 1)
+
+        # checks unsubscribing
         response = self.createDELETE(url, {'unsubscribe' : True})
-        notification = models.Notification.objects.filter(id=2)
-        
+        notification = models.Notification.objects.filter(game=game)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(notification), 0)
 
 
-    # tests all PUT methods in game_api
+    # Checks user updating pay status
+    def test_game_PAY(self):
+        url = reverse("Game_api", args=[2])
+        self.client.login(username="user2", password="password1")
+
+        response = self.createPUT(url, {'paid': True})
+        player = models.Player.objects.get(game=2, user=2)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(player.paid, True)
+
+
+    # tests all admin PUT methods in game_api
     def test_game_PUT(self):
         # url is game where user is admin and bad_url is where it is not
         url = reverse("Game_api", args=[2])
         bad_url = reverse("Game_api", args=[1])
         self.client.login(username="user2", password="password1")
-
-        # checks player paid status changes
-        response = self.createPUT(url, {'paid': True})
-        player = models.Player.objects.get(game=2, user=2)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(player.paid, True)
 
         # checks game privacy changes (only admin)
         response = self.createPUT(url, {'toggle_privacy': True})
@@ -463,7 +472,7 @@ class TestViews(TestCase):
         self.assertEqual(bad_response.status_code, 400)
         self.assertEqual(game.is_private, True)
 
-        # checks if description is changed
+        # checks if description is changed (only admin)
         response = self.createPUT(url, {'description': "changing description"})
         bad_response = self.createPUT(bad_url, {'description': "changing description"})
         game = models.Game.objects.get(id=2)
@@ -471,13 +480,6 @@ class TestViews(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(bad_response.status_code, 400)
         self.assertEqual(game.description, "changing description")
-
-        # checks if notification object is created when user subscribes
-        response = self.createPUT(url, {'subscribe': True})
-        notification = models.Notification.objects.filter(game=game, user=2)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(notification), 1)
 
         # checks game is set to fulltime (only admin)
         response = self.createPUT(url, {'fulltime': True})
