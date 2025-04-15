@@ -574,7 +574,6 @@ class TestViews(TestCase):
         private_response = self.createPOST(private_url, {'to_user' : 2})
         public_response = self.createPOST(public_url, {'to_user' : 2})
         invite = models.GameInvite.objects.filter(from_user=self.user3, to_user=2)
-
         self.assertEqual(private_response.status_code, 200)
         self.assertEqual(public_response.status_code, 200)
         self.assertEqual(len(invite), 2)        
@@ -593,14 +592,12 @@ class TestViews(TestCase):
         response = self.createDELETE(private_url, {'game_invite' : 1})
         response = self.createDELETE(public_url, {'game_invite' : 2})
         invite = models.GameInvite.objects.filter(from_user=self.user3, to_user=2)
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(invite), 0)
 
         # When invite is canceled/cleared user should be able to view public game but not private
         response = self.client.get(privateGame_url)
         self.assertEqual(response.status_code, 400)
-        
         response = self.client.get(publicGame_url)
         self.assertEqual(response.status_code, 200)
 

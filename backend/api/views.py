@@ -807,7 +807,8 @@ def profile_api(request):
             user.full_clean()
             user.save()
         except ValidationError as e:
-            return JsonResponse({'error': str(e)}, status=400)
+            errorMsg = next(iter(e.message_dict.values()))[0]
+            return JsonResponse({'error': errorMsg}, status=400)
 
     return JsonResponse({'user': request.user.as_dict(),
                         'email': request.user.email,

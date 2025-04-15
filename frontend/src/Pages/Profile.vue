@@ -21,6 +21,7 @@
                         <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#passwordModal">Change Password</button>
                     </div>
                     <p v-if="errorMessage" class="alert alert-danger mt-3" role="alert">{{ errorMessage }}</p>
+                    <p v-if="successMessage" class="alert alert-success mt-3" role="alert">{{ successMessage }}</p>
                 </div>
             </div>
         </div>
@@ -43,12 +44,10 @@
                                 <label class="form-label">Postcode</label>
                                 <input v-model="postcode" type="text" class="form-control" id="postcode">
                             </div>
-
-                            <p v-if="errorMessage" class="alert alert-danger mt-3" role="alert">{{ errorMessage }}</p>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary" @click="editUser">Save changes</button>
+                            <button type="submit" class="btn btn-primary" @click="editUser" data-bs-dismiss="modal">Save changes</button>
                         </div>
                     </form>
                 </div>
@@ -105,7 +104,8 @@ export default {
                 old: '',
                 new: ''
             },
-            errorMessage: ''
+            errorMessage: '',
+            successMessage: ''
         }
     },
     async mounted() {
@@ -123,7 +123,8 @@ export default {
         async editProfile() {
             await this.findGeo(this.postcode)
             if (!this.longitude || !this.latitude) {
-                this.errorMessage = "Invalid Postcode.";
+                this.errorMessage = "Invalid Postcode."
+                this.successMessage = ''
                 return
             }
 
@@ -147,6 +148,11 @@ export default {
                 this.email = data.email
                 this.postcode = data.postcode
                 this.errorMessage = ''
+                this.successMessage = "Profile change successful"
+            }
+            else {
+                this.errorMessage = data.error
+                this.successMessage = ''
             }
         },
         async findGeo(postcode) {
@@ -154,7 +160,6 @@ export default {
             const response = await fetch(`https://api.postcodes.io/postcodes/${postcode}`)
             const data = await response.json()
             if (response.ok) {
-                console.log(data.result.longitude)
                 this.longitude = data.result.longitude
                 this.latitude = data.result.latitude
             }
@@ -180,9 +185,11 @@ export default {
                 this.password.old = ''
                 this.password.new = ''
                 this.errorMessage = ""
+                this.successMessage = "Password change successfully"
             }
             else {
                 this.errorMessage = "Invalid Details"
+                this.successMessage = ''
             }
         }
     }
