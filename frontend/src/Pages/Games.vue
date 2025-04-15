@@ -207,15 +207,18 @@ export default {
             // validating fields 
             await this.findGeo(this.newGame.postcode)
             if (!this.newGame.longitude || !this.newGame.latitude) {
-                this.errorMessage = "Invalid Postcode.";
+                this.errorMessage = "Invalid Postcode."
+                this.successMessage = ''
                 return
             }
             if (this.newGame.totalPlayers < 10 || this.newGame.totalPlayers > 22 || this.newGame.totalPlayers % 2 != 0) {
                 this.errorMessage = "Total players must be between 10-22 (11-5 aside)"
+                this.successMessage = ''
                 return
             }
             if (this.newGame.price < 0) {
                 this.errorMessage = "Invalid price"
+                this.successMessage = ''
                 return
             }
 
@@ -241,7 +244,6 @@ export default {
             else {
                 this.errorMessage = data.error
                 this.successMessage = ''
-                // this.errorMessage = 'Invalid details'
             }
         },
         async findGeo(postcode) {
