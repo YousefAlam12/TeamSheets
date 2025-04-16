@@ -1,39 +1,29 @@
-from django.shortcuts import render
-from django.http import HttpResponse, HttpRequest, JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
 import datetime
-from django.utils.timezone import now
+from .models import User, Game, Player, Rating, FriendRequest, GameInvite, Notification
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import D
+from django.contrib.gis.db.models.functions import Distance
+from django.db.models import Q
+from django.core.mail import send_mail
+from django.conf import settings
+import threading
+import json
 
-##########################################################
-# remember to update requirements.txt
+# pymoo
 import numpy as np
 import random
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.core.problem import Problem
 from pymoo.optimize import minimize
 from pymoo.operators.mutation.pm import PM
-##########################################################
 
-from .models import User, Game, Player, Rating, FriendRequest, GameInvite, Notification
-from django.contrib.gis.geos import Point
-from django.contrib.gis.measure import D
-from django.contrib.gis.db.models.functions import Distance
-from django.db.models import Q
 
-from django.core.mail import send_mail
-from django.conf import settings
-import threading
-import json
-
-###############################################################################################
-# Helper class for team balancing
 
 # NSGA-II problem for team balancing
-
-
 class TeamBalancingProblem(Problem):
     def __init__(self, players):
         self.players = players
@@ -123,7 +113,7 @@ def balanceTeams(request, game_id):
         if playerTeams.count(playerTeams[0]) == len(playerTeams) // 2:
             valid_solutions.append(playerTeams)
 
-    # removing duplicate solutions to allow different teams to be given on second call
+    # removing duplicate solutions to allow for different teams
     best_solutions = []
     [best_solutions.append(s)
     for s in valid_solutions if s not in best_solutions]
@@ -135,6 +125,7 @@ def balanceTeams(request, game_id):
     teamA = []
     teamB = []
 
+    # Assigning teams to player objects based on solution to update page
     for i, team in enumerate(best_solution):
         if team <= 0:
             teamA.append(players[i].user.username)
@@ -147,55 +138,6 @@ def balanceTeams(request, game_id):
 
     return JsonResponse({'game': game.as_dict()})
 
-###############################################################################################
-
-
-def test_api_view(request):
-    # user_location = Point(0.105618, 51.549457)
-    # user = User.objects.get(id=1)
-    # user_location = user.location
-    # x = Game.objects.filter(location__distance_lte=(user_location, D(km=5)))
-    # games = [game.as_dict() for game in x]
-    # print(x)
-    # print(games[0]['players'])
-
-    # return JsonResponse({
-    #     'games': games
-    # })
-
-    # user = User.objects.get(id=1)
-    # user_location = user.location
-    # x = Game.objects.annotate(distance=Distance('location', request.user.location)).order_by('distance', 'date')
-    # games = [game.as_dict() for game in x]
-
-    # return JsonResponse({
-    #     'games': games
-    # })
-
-    # print(request.user.stats)
-
-    # send_mail(
-    #     "Subject here",
-    #     f"Here is the message. Testing 123.....{20 + 20}",
-    #     'settings.EMAIL_HOST_USER',
-    #     [request.user.email],
-    #     fail_silently=False,
-    # )
-
-
-    x = Game.objects.get(id=2)
-    z = request.user.invite_to.filter(game=x)
-    print(z.count())
-
-    if not isAdmin(request.user, x):
-        return JsonResponse({'error': 'only admin is allowed to do this'}, status=400)
-    
-    return JsonResponse({
-        'user': request.user.as_dict(),
-        'game': x.as_dict()
-        # 'stats': request.user.stats
-    })
-
 
 def isAuthenticated(request):
     # checks to see if user is logged in to correctly restrict pages
@@ -204,14 +146,9 @@ def isAuthenticated(request):
                              'user': request.user.as_dict()})
     else:
         return JsonResponse({"isAuth": False})
-    # isAuth = request.user.is_authenticated
-    # print(isAuth)
-    # print(request.user)
-    # return JsonResponse({"isAuth": isAuth})
 
 
 def login_api(request):
-    # login view
     if request.user.is_authenticated:
         return
 
@@ -242,7 +179,6 @@ def signup(request):
 
     if request.method == 'POST':
         POST = json.loads(request.body)
-        print(POST)
 
         firstname = POST['firstname']
         lastname = POST['lastname']
@@ -284,13 +220,6 @@ def signup(request):
             return JsonResponse({'error': errorMsg}, status=400)
 
 
-# def user_api(request):
-#     if request.user.is_authenticated:
-#         return JsonResponse({'user': request.user.as_dict()})
-#     else:
-#         return JsonResponse({'error': 'not authenticated'})
-
-
 @login_required
 def send_friend_request(request):
     if request.method == 'POST':
@@ -300,7 +229,7 @@ def send_friend_request(request):
         friend_request, created = FriendRequest.objects.get_or_create(
             from_user=from_user, to_user=to_user)
         if created:
-            # send an notification to the user being invited
+            # send an notification to the user being invited (thread to prevent frontend loading)
             threading.Thread(
                 target=requestNotification, 
                 args=(
@@ -330,7 +259,7 @@ def friends_api(request):
                 friend_request.from_user.friends.add(friend_request.to_user)
                 friend_request.delete()
 
-                # send an notification to the user being invited
+                # send an notification to the user being invited (thread to prevent frontend loading)
                 threading.Thread(
                     target=requestNotification, 
                     args=(
@@ -352,18 +281,8 @@ def friends_api(request):
                         })
 
 
-# @login_required
-# # returns all games in db
-# def all_games_api(request):
-#     if request.method == 'GET':
-#         print('getting finished games...')
-#         games = Game.objects.all()
-#         data = [game.as_dict() for game in games]
-#         return JsonResponse({'games': data})
-
-
 @login_required
-# returns games which current user is in
+# returns games user is linked with
 def my_games_api(request):
     if request.method == 'GET':
         today = datetime.datetime.now()
@@ -391,7 +310,6 @@ def games_api(request):
     if request.method == 'POST':
         POST = json.loads(request.body)
         POST = POST['game']
-        print(POST)
 
         # check if necessary fields are filled
         required_fields = ['name', 'date', 'start_time', 'end_time',
@@ -426,17 +344,10 @@ def games_api(request):
         )
         newPlayer.save()
 
-    # games = Game.objects.filter(fulltime=False, date__gte=today).order_by('date')
     # orders games by distance from user
     today = datetime.datetime.now()
     games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(
         Q(date__gt=today) | Q(date=today.date()) & Q(end_time__gte=today.time()), fulltime=False, is_private=False).order_by('distance', 'date')
-
-    # games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(
-    #     fulltime=False, is_private=False, date__gte=today.date()).order_by('distance', 'date')
-    
-    # games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(
-    #     fulltime=False, is_private=False, date__gte=today.date(), end_time__gte=today.time()).order_by('distance', 'date')
     data = [game.as_dict() for game in games]
     if len(data) <= 0:
         data = None
@@ -452,7 +363,7 @@ def isAdmin(user, game):
 
 
 @login_required
-# endpoint for a game, handles joining/leaving game and pay status
+# endpoint for a game, handles all game operations
 def game_api(request, game_id):
     # checks if game exists
     try:
@@ -462,7 +373,7 @@ def game_api(request, game_id):
 
     player = Player.objects.filter(user=request.user, game=game)
     
-    # only allows admin and players/invited of private game to view
+    # only allows admin and players/invited to view private game
     if game.is_private and request.user != game.admin:
         gameInvite = request.user.invite_to.filter(game=game)
         if player.count() <= 0 and gameInvite.count() <= 0:
@@ -498,7 +409,7 @@ def game_api(request, game_id):
             if not created:
                 return JsonResponse({'error': "player already exists"}, status=400)
 
-            # send email to subscribers
+            # send email to subscribers (thread to prevent frontend loading)
             threading.Thread(
                 target=gameNotification, 
                 args=(
@@ -517,11 +428,12 @@ def game_api(request, game_id):
     if request.method == 'DELETE':
         DELETE = json.loads(request.body)
 
+        # player leaves game
         if DELETE.get('leave'):
             if player == None:
                 return JsonResponse({'error': "player does not exists"}, status=400)
 
-            # send email to subscribers
+            # send email to subscribers (thread to prevent frontend loading)
             threading.Thread(
                 target=gameNotification, 
                 args=(
@@ -532,6 +444,7 @@ def game_api(request, game_id):
             player.delete()
             removeNotifications(user=request.user, game=game)
         
+        # admin removes player
         if DELETE.get('kick'):
             # request only allowed if user is admin
             if not isAdmin(request.user, game):
@@ -548,6 +461,7 @@ def game_api(request, game_id):
             player.delete()
             removeNotifications(user=DELETE['kick'], game=game)
 
+        # admin cancels game removing game from system
         if DELETE.get('cancel_game'):
             # request only allowed if user is admin
             if not isAdmin(request.user, game):
@@ -563,6 +477,7 @@ def game_api(request, game_id):
             game.delete()
             return JsonResponse({'success' : 'game is deleted'})
 
+        # user disables notifications
         if DELETE.get('unsubscribe'):
             notificaton = Notification.objects.get(game=game, user=request.user)
             notificaton.delete()
@@ -580,6 +495,7 @@ def game_api(request, game_id):
             player.paid = True
             player.save()
 
+        # admin calls fulltime on game
         if PUT.get('fulltime'):
             # request only allowed if user is admin
             if not isAdmin(request.user, game):
@@ -598,6 +514,7 @@ def game_api(request, game_id):
                     True)
                     ).start()
 
+        # changes privacy of game
         if PUT.get('toggle_privacy'):
             # request only allowed if user is admin
             if not isAdmin(request.user, game):
@@ -606,6 +523,7 @@ def game_api(request, game_id):
             game.is_private = not game.is_private
             game.save()
 
+        # user allows notifications
         if PUT.get('subscribe'):
             # prevents invited users from subbing to private games when they are not a player
             gameInvite = request.user.invite_to.filter(game=game)
@@ -616,6 +534,7 @@ def game_api(request, game_id):
             notification.save()
             return JsonResponse({'user': request.user.as_dict()})
         
+        # admin can change description of game
         if PUT.get('description'):
             # request only allowed if user is admin
             if not isAdmin(request.user, game):
@@ -631,7 +550,7 @@ def game_api(request, game_id):
 
 
 @login_required
-# api for choosing teams in the game page
+# api for manually choosing teams in game page
 def teams_api(request, game_id):
     try:
         game = Game.objects.get(id=game_id)
@@ -644,8 +563,6 @@ def teams_api(request, game_id):
 
     if request.method == 'PUT':
         PUT = json.loads(request.body)
-        print(PUT)
-
         player = Player.objects.get(user=PUT['player'], game=game_id)
 
         # if player is on the same team as button clicked team will reset
@@ -660,6 +577,7 @@ def teams_api(request, game_id):
 
 
 @login_required
+# api for users to rate each other and update stats
 def ratings_api(request, game_id):
     try:
         game = Game.objects.get(id=game_id)
@@ -672,6 +590,7 @@ def ratings_api(request, game_id):
     if isPlaying.count() <= 0 or (not game.fulltime):
         return JsonResponse({'error': 'Cannot rate this game'}, status=400)
 
+    # finds players user already rated to prevent double rating
     ratedPlayers = Rating.objects.filter(rater=request.user, game=game_id)
 
     if request.method == 'POST':
@@ -713,10 +632,10 @@ def ratings_api(request, game_id):
 
 
 @login_required
+# api handling invitations to games
 def gameInvite(request, game_id):
     game = Game.objects.get(id=game_id)
     player = Player.objects.filter(user=request.user, game=game)
-
 
     if request.method == 'POST':
         # only admin and players are allowed to invite in private games
@@ -734,7 +653,7 @@ def gameInvite(request, game_id):
         if len(player_check) > 0:
             return JsonResponse({'error': 'User is already a player in the game'}, status=400) 
 
-        # send an notification to the user being invited
+        # send an notification to the user being invited (thread to prevent frontend loading)
         threading.Thread(
                 target=requestNotification, 
                 args=(
@@ -745,6 +664,7 @@ def gameInvite(request, game_id):
         
         return JsonResponse({'success': 'user has been invited'})
 
+    # rejects game invite
     if request.method == 'DELETE':
         DELETE = json.loads(request.body)
         game_invite = GameInvite.objects.get(id=DELETE['game_invite'])
@@ -753,7 +673,7 @@ def gameInvite(request, game_id):
         return JsonResponse({'user': request.user.as_dict()})
 
 
-# sends email notification about game statuses
+# helper funcition sends email notification about game statuses
 def gameNotification(game, subject, message, include_players=False, kickEmail=None):
     subscribers = Notification.objects.filter(game=game.id)
     recipients = [sub.user.email for sub in subscribers]
@@ -778,7 +698,7 @@ def gameNotification(game, subject, message, include_players=False, kickEmail=No
     )
     
 
-# sends email notification about invites/friendrequests statuses
+# helper function sends email notification about invites/friendrequests statuses
 def requestNotification(subject, message, recipient):
     send_mail(
         subject,
@@ -789,6 +709,7 @@ def requestNotification(subject, message, recipient):
     )
 
 
+# helper function removes notification objs
 def removeNotifications(user, game):
     notification = Notification.objects.filter(game=game, user=user)
     if len(notification) > 0:
@@ -798,9 +719,11 @@ def removeNotifications(user, game):
 
 
 @login_required
+# api for profile page
 def profile_api(request):
     user = request.user
     
+    # changes user details
     if request.method == 'PUT':
         PUT = json.loads(request.body)
 
@@ -821,18 +744,18 @@ def profile_api(request):
 
 
 @login_required
+# api for changing password
 def password_api(request):
     user = request.user
 
+    # changes password after validation
     if request.method == 'PUT':
         PUT = json.loads(request.body)
-        print(PUT)
         valid = authenticate(username=user.username, password=PUT['old'])
         if valid is None or PUT['new'] == '':
             print("invalid")
             return JsonResponse({'error': 'error'}, status=400)
         else:
-            print("valid")
             user.set_password(PUT['new'])
             user.save()
             login(request, user)

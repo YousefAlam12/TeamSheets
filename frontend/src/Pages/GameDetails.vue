@@ -464,15 +464,16 @@ export default {
                     const data = await response.json()
                     if (response.ok) {
                         this.game = data.game
+                        
+                        // updates page to rating view
+                        const response2 = await fetch(`http://localhost:8000/ratings/${this.id}`, {
+                            credentials: 'include'
+                        })
+                        const data2 = await response2.json()
+                        this.ratedPlayers = data2.ratedPlayers
                     }
                 }
             }
-
-            const response2 = await fetch(`http://localhost:8000/ratings/${this.id}`, {
-                credentials: 'include'
-            })
-            const data = await response2.json()
-            this.ratedPlayers = data.ratedPlayers
         },
         async setSelectedPlayer(currentPlayer) {
             this.selectedPlayer = currentPlayer

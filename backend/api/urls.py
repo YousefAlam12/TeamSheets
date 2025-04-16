@@ -15,15 +15,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path
-from .views import test_api_view
+# from .views import test_api_view
 
 from api import views
 
 
 urlpatterns = [
     # API entry points should be defined here
-    path('test', test_api_view, name='api test'),
-    # path('user', views.user_api, name='User'),
     path('login', views.login_api, name="Login"),
     path('logout', views.logout_api, name="Logout"),
     path('signup', views.signup, name="Signup"),
@@ -33,7 +31,6 @@ urlpatterns = [
     path('profile', views.profile_api, name="Profile"),
     path('password', views.password_api, name="Password"),
 
-    # path('allGames', views.all_games_api, name="All Games"),
     path('myGames', views.my_games_api, name="My Games"),
     path('games', views.games_api, name="Games"),
     path('game/<int:game_id>', views.game_api, name="Game_api"),
