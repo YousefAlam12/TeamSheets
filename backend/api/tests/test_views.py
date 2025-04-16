@@ -22,6 +22,9 @@ class TestViews(TestCase):
         self.user3 = models.User.objects.create_user(
             first_name="user3", last_name="testing", username="user3", password="password1", email="user3@email.com", date_of_birth=date(2000, 1, 1), postcode="E1 0QE", location=Point(-0.045764, 51.515359)
         )
+        self.user4 = models.User.objects.create_user(
+            first_name="user4", last_name="testing", username="user4", password="password1", email="user4@email.com", date_of_birth=date(2000, 1, 1), postcode="E1 0QE", location=Point(-0.045764, 51.515359)
+        )
 
         # test games
         self.game1 = models.Game.objects.create(name="Game 1", date=date.today(), start_time=datetime.now(), end_time=(datetime.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user1, is_private=False, fulltime=False)
@@ -176,7 +179,7 @@ class TestViews(TestCase):
 
         # should return response with list of all users and user as dictionary
         self.assertIsNotNone(res.get('user'))
-        self.assertEqual(len(res.get('userList')), 2)
+        self.assertEqual(len(res.get('userList')), 3)
 
 
     def test_friends_Accept(self):
@@ -377,15 +380,35 @@ class TestViews(TestCase):
         self.assertEqual(response.status_code, 400)
 
 
+    # Checks joining games
     def test_game_POST(self):
         url = reverse("Game_api", args=[1])
         self.client.login(username="user2", password="password1")
 
+        # checks user joining new game
         response = self.createPOST(url, {'join' : True})
-        player = models.Player.objects.filter(game=1, user=3)
-        
+        player = models.Player.objects.filter(game=1, user=2)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(player), 1)
+
+        # checks user joining game they're already in
+        url = reverse("Game_api", args=[2])
+        response = self.createPOST(url, {'join' : True})
+        player = models.Player.objects.filter(game=2, user=2)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(len(player), 1)
+
+        # checks user joining private game without invite
+        url = reverse("Game_api", args=[3])
+        response = self.createPOST(url, {'join' : True})
+        self.assertEqual(response.status_code, 400)
+        
+        # checks user joining fulltime game
+        self.client.logout()
+        self.client.login(username="user4", password="password1")
+        url = reverse("Game_api", args=[4])
+        response = self.createPOST(url, {'join' : True})
+        self.assertEqual(response.status_code, 400)
 
 
     # DELETE methods for game_api
@@ -523,7 +546,6 @@ class TestViews(TestCase):
     def test_ratings(self):
         url = reverse("Ratings", args=[4])
         self.client.login(username="user1", password="password1")
-
         response = self.client.get(url)
         res = response.json()
 
@@ -544,12 +566,11 @@ class TestViews(TestCase):
         })
         res = response.json()
         rating = models.Rating.objects.filter(rater=self.user1, ratee=self.user3)
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(res['ratedPlayers']), 3)
         self.assertEqual(len(rating), 1)
 
-        # makes sure user is unable to rate a player already rated
+        # Checks user is unable to rate a player already rated
         response = self.createPOST(url, {
             'ratings': {
                 'attack': 4,
@@ -561,10 +582,20 @@ class TestViews(TestCase):
             'player': 3
         })
         rating = models.Rating.objects.filter(rater=self.user1, ratee=self.user3)
-
         self.assertEqual(response.status_code, 400)
         self.assertEqual(len(res['ratedPlayers']), 3)
         self.assertEqual(len(rating), 1)
+
+        # Checks user cannot rate game not at fulltime
+        bad_url = reverse("Ratings", args=[2])
+        response = self.client.get(bad_url)
+        self.assertEqual(response.status_code, 400)
+
+        # Checks user who didnt play cannot rate
+        self.client.logout()
+        self.client.login(username="user4", password="password1")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
 
 
     def test_gameInvite(self):

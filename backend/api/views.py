@@ -488,7 +488,12 @@ def game_api(request, game_id):
         POST = json.loads(request.body)
 
         if POST.get('join'):
+            # validates if game is joinable
+            currentPlayers = Player.objects.filter(game=game_id)
+            if len(currentPlayers) >= game.totalPlayers or game.fulltime:
+                return JsonResponse({'error': "game is not joinable"}, status=400)
 
+            # validates if user is already a player
             player, created = Player.objects.get_or_create(user=request.user, game=game)
             if not created:
                 return JsonResponse({'error': "player already exists"}, status=400)
@@ -663,9 +668,9 @@ def ratings_api(request, game_id):
     
     isPlaying = Player.objects.filter(user=request.user, game=game)
 
-    # only entry if user actually played in game
-    if isPlaying.count() <= 0:
-        return JsonResponse({'error': 'Only players that played can rate'}, status=400)
+    # allow entry if user actually played in game and fulltime is called
+    if isPlaying.count() <= 0 or (not game.fulltime):
+        return JsonResponse({'error': 'Cannot rate this game'}, status=400)
 
     ratedPlayers = Rating.objects.filter(rater=request.user, game=game_id)
 
