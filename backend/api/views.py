@@ -331,7 +331,6 @@ def games_api(request):
             address=POST['address'],
             postcode=POST['postcode'],
             location=Point(POST['longitude'], POST['latitude']),
-            # is_private=POST.get('is_private', False),
             is_private=POST['is_private'],
             admin=request.user
         )
@@ -753,7 +752,6 @@ def password_api(request):
         PUT = json.loads(request.body)
         valid = authenticate(username=user.username, password=PUT['old'])
         if valid is None or PUT['new'] == '':
-            print("invalid")
             return JsonResponse({'error': 'error'}, status=400)
         else:
             user.set_password(PUT['new'])
@@ -761,3 +759,29 @@ def password_api(request):
             login(request, user)
 
     return JsonResponse({'user': user.as_dict()})
+
+
+def matchmake_api(request):
+    userRating = request.user.overallRating
+    recommended_games = []
+    today = datetime.datetime.now()
+    games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(
+        Q(date__gt=today) | Q(date=today.date()) & Q(end_time__gte=today.time()), fulltime=False, is_private=False).order_by('distance', 'date')
+    
+    # finds recommended games based on user's stats
+    for game in games:
+        gameRating = 0
+        players = Player.objects.filter(game=game)
+        
+        # calculates game's overall rating based on players stats
+        for p in players:
+            gameRating += p.user.overallRating
+
+        gameRating /= len(players)
+        gameRating = round(gameRating, 1)
+        
+        if (userRating-1.5) <= gameRating <= (userRating+1.5):
+            recommended_games.append(game)
+
+    data = [game.as_dict() for game in recommended_games]
+    return JsonResponse({'games': data})

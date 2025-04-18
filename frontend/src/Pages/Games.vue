@@ -131,14 +131,35 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
+                            <label for="filter-matchmake" class="form-label">Matchmake</label>
+                            <div class="form-check form-switch">
+                                <small class="form-text text-muted" id="matchmakeInfo">Toggle skill based matchmaking</small>
+                                <input v-model="filter.matchmake" type="checkbox" role="switch" class="form-check-input" id="filter-matchmake">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="filter-date" class="form-label">Date</label>
                             <input v-model="filter.date" type="date" class="form-control" id="filter-date">
                         </div>
 
                         <div class="mb-3">
-                            <label for="price" class="form-label">Price</label>
+                            <label for="filter-price" class="form-label">Price</label>
                             <input v-model="filter.price" type="number" class="form-control" id="filter-price" min="0">
                             <small id="priceInfo" class="form-text text-muted">All games upto selected price</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="filter-gameType" class="form-label">Game Type</label>
+                            <select v-model="filter.game_type" id="filter-gameType" class="form-select">
+                                <option :value="10">5-aside</option>
+                                <option :value="12">6-aside</option>
+                                <option :value="14">7-aside</option>
+                                <option :value="16">8-aside</option>
+                                <option :value="18">9-aside</option>
+                                <option :value="20">10-aside</option>
+                                <option :value="22">11-aside</option>
+                            </select>
                         </div>
 
                         <div class="mb-3">
@@ -186,8 +207,10 @@ export default {
             successMessage : '',
             shownGames : [],
             filter : {
+                matchmake: null,
                 date: null,
                 price: null,
+                game_type: null,
                 address: null,
             },
             store: useUserStore()
@@ -235,7 +258,6 @@ export default {
 
             const data = await response.json()
             if (response.ok) {
-                console.log(data)
                 this.successMessage = `${this.newGame.name} was successfully created`
                 this.resetNewGame()
                 this.games = data.games
@@ -247,16 +269,13 @@ export default {
             }
         },
         async findGeo(postcode) {
-            console.log(postcode)
             const response = await fetch(`https://api.postcodes.io/postcodes/${postcode}`)
             const data = await response.json()
             if (response.ok) {
-                console.log(data.result.longitude)
                 this.newGame.longitude = data.result.longitude
                 this.newGame.latitude = data.result.latitude
             }
             else {
-                console.log(data.error)
                 this.newGame.longitude = null
                 this.newGame.latitude = null
             }
@@ -276,12 +295,19 @@ export default {
             }
             this.errorMessage = ''
         },
-        filterGames(filteredGames) {
+        async filterGames(filteredGames) {
+            if (this.filter.matchmake == true) {
+                const recommended = await this.matchmake()
+                filteredGames = recommended.games
+            }
             if (this.filter.date != null) {
                 filteredGames = filteredGames.filter(game => game.date == this.filter.date)
             }
             if (this.filter.price != null && typeof this.filter.price == 'number') {
                 filteredGames = filteredGames.filter(game => game.price <= this.filter.price)
+            }
+            if (this.filter.game_type != null) {
+                filteredGames = filteredGames.filter(game => game.totalPlayers == this.filter.game_type)
             }
             if (this.filter.address != null) {
                 filteredGames = filteredGames.filter(game => {
@@ -294,6 +320,13 @@ export default {
             this.shownGames = this.games
             Object.keys(this.filter).forEach(key => {
                 this.filter[key] = null})
+        },
+        async matchmake() {
+            const response = await fetch('http://localhost:8000/matchmake', {
+                credentials: 'include'
+            })
+            const data = await response.json()
+            return data
         }
     }
 }

@@ -67,6 +67,17 @@ class User(AbstractUser):
             stats[s] = round(stats[s] / len(ratings), 1)
 
         return stats
+    
+    @property
+    # overall rating used to apply skill based matchmaking on games
+    def overallRating(self):
+        # new users overall rating starts at 5
+        if self.stats == None:
+            return 5
+        
+        userRating = (self.stats['attack'] + self.stats['defence'] + self.stats['strength'] + self.stats['speed'] + self.stats['technique']) / 5
+        userRating = round(userRating, 1)
+        return userRating
 
 
 class Game(models.Model):

@@ -48,7 +48,7 @@ class TestViews(TestCase):
         models.Player.objects.create(user=self.user1, game=self.privateGame)
 
         # Rating objects
-        models.Rating.objects.create(rater=self.user1, ratee=self.user2, game=self.fulltimeGame, attack=7, defence=3, strength=4, speed=7, technique=7)
+        models.Rating.objects.create(rater=self.user1, ratee=self.user2, game=self.fulltimeGame, attack=8, defence=4, strength=8, speed=7, technique=6)
 
 
     # Setup Method for team balancing algorithm test
@@ -634,6 +634,17 @@ class TestViews(TestCase):
         response = self.client.get(publicGame_url)
         self.assertEqual(response.status_code, 200)
 
+
+    def test_matchmake(self):
+        url = reverse("Matchmake")
+        self.client.login(username="user2", password="password1")
+        response = self.client.get(url)
+        res = response.json()
+
+        # checks if games are filtered based on user's stats
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(res['games']), 1)
+        self.assertEqual(res['games'][0].get('name'), "Game 2")
 
 
     def test_balanceTeams(self):

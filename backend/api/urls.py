@@ -15,8 +15,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path
-# from .views import test_api_view
-
 from api import views
 
 
@@ -38,4 +36,5 @@ urlpatterns = [
     path('balanceTeams/<int:game_id>', views.balanceTeams, name="Balance Teams"),
     path('ratings/<int:game_id>', views.ratings_api, name="Ratings"),
     path('gameInvite/<int:game_id>', views.gameInvite, name="Game Invite"),
+    path('matchmake', views.matchmake_api, name="Matchmake")
 ]

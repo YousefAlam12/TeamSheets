@@ -92,3 +92,6 @@ class TestUrls(TestCase):
         self.assertEqual(resolve(url).func, views.gameInvite)
 
     
+    def test_url_matchmake(self):
+        url = reverse("Matchmake")
+        self.assertEqual(resolve(url).func, views.matchmake_api)
