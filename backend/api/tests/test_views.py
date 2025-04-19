@@ -47,6 +47,10 @@ class TestViews(TestCase):
         # PRIVATE GAME test players
         models.Player.objects.create(user=self.user1, game=self.privateGame)
 
+        # Friend users
+        self.user3.friends.add(self.user4)
+        self.user4.friends.add(self.user3)
+
         # Rating objects
         models.Rating.objects.create(rater=self.user1, ratee=self.user2, game=self.fulltimeGame, attack=8, defence=4, strength=8, speed=7, technique=6)
 
@@ -242,6 +246,19 @@ class TestViews(TestCase):
         # FriendRequest object should be deleted
         friend_requests = models.FriendRequest.objects.all()
         self.assertEqual(len(friend_requests), 0)
+
+        # login as user3 to check if user is able to remove friend
+        self.client.logout()
+        self.client.login(username="user3", password="password1")
+        get_response = self.client.get(url).json()
+        response  = self.createDELETE(url, {'unfriending': get_response['user']['friends'][0].get('id')})
+        res = response.json()
+
+        # checks users are removed from friends list in database ann response
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(res['user']['friends']), 0)
+        self.assertEqual(len(self.user3.friends.all()), 0)
+        self.assertEqual(len(self.user4.friends.all()), 0)
     
 
     def test_profile(self):

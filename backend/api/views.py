@@ -250,11 +250,17 @@ def friends_api(request):
 
     if request.method != 'GET':
         JSON = json.loads(request.body)
-        friend_request = FriendRequest.objects.get(from_user=JSON['from_user'], to_user=request.user)
-        from_user = User.objects.get(id=friend_request.from_user.id)
+        if JSON.get('from_user'):
+            friend_request = FriendRequest.objects.filter(from_user=JSON['from_user'], to_user=request.user).first()
+            user_unfriend = None
+        else:
+            user_unfriend = request.user.friends.filter(id=JSON['unfriending']).first()
+            friend_request = None
 
+        # adds user to friends and removes friend request
         if request.method == 'POST':
-            if friend_request.to_user == request.user:
+            if friend_request and friend_request.to_user == request.user:
+                from_user = User.objects.get(id=friend_request.from_user.id)
                 friend_request.to_user.friends.add(friend_request.from_user)
                 friend_request.from_user.friends.add(friend_request.to_user)
                 friend_request.delete()
@@ -268,13 +274,28 @@ def friends_api(request):
                         from_user.email)
                         ).start()
             else:
-                return JsonResponse({'error': 'user does not exist'}, status=400)
+                return JsonResponse({'error': 'request does not exist'}, status=400)
 
         if request.method == 'DELETE':
-            if friend_request.to_user == request.user:
+            # removes friend request and does not add user to friends
+            if friend_request and friend_request.to_user == request.user:
                 friend_request.delete()
+
+            # removes user from friends list
+            elif user_unfriend and user_unfriend.friends.filter(id=request.user.id).first():
+                request.user.friends.remove(user_unfriend)
+                user_unfriend.friends.remove(request.user)
+
+                # send an notification to the user being unfriended (thread to prevent frontend loading)
+                threading.Thread(
+                    target=requestNotification, 
+                    args=(
+                        f"Unfriended by {request.user.username}",
+                        f"You are no longer friends with {request.user.username}.",
+                        user_unfriend.email)
+                        ).start()
             else:
-                return JsonResponse({'error': 'user does not exist'}, status=400)
+                return JsonResponse({'error': 'user not allowed to remove friend/request'}, status=400)
 
     return JsonResponse({'userList': userList,
                         'user': request.user.as_dict()

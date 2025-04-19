@@ -31,7 +31,7 @@
                     Request</button>
             </div>
             <ul class="list-group list-group-flush">
-                <li v-for="user in user.friends" class="list-group-item">
+                <li v-for="user in user.friends" class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <span>{{ user.username }}</span>
                         <small class="form-text text-muted">
@@ -47,6 +47,7 @@
                             </div>
                         </small>
                     </div>
+                    <button class="btn btn-danger btn-sm" @click="unfriend(user)">Unfriend</button>
                 </li>
                 <li v-if="user.friends.length === 0" class="list-group-item text-center text-muted">
                     No friends added yet.
@@ -88,7 +89,6 @@
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="">Close</button>
-                        <!-- <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="">Apply Filters</button> -->
                     </div>
                 </div>
             </div>
@@ -159,6 +159,24 @@ export default {
                 this.user = useUserStore().user
             }
         },
+        // removes user from friends list
+        async unfriend(user) {
+            if (confirm(`Are you sure you want to unfriend ${user.username}?`)) {
+                const response = await fetch('http://localhost:8000/friends', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ 'unfriending': user.id })
+                })
+                const data = await response.json()
+                if (response.ok) {
+                    useUserStore().saveUser(data.user)
+                    this.user = useUserStore().user
+                }
+            }
+        }
     }
 }
 </script>
