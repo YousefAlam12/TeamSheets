@@ -10,14 +10,9 @@ dill==0.3.9
 Django==5.1.1
 django-cors-headers==4.4.0
 fonttools==4.56.0
-GDAL==3.10.0
 grapheme==0.6.0
 kiwisolver==1.4.8
 matplotlib==3.10.0
-mkl-service==2.4.0
-mkl_fft @ file:///C:/Users/dev-admin/mkl/mkl_fft_1730823082242/work
-mkl_random @ file:///C:/Users/dev-admin/mkl/mkl_random_1730822522280/work
-numpy @ file:///C:/b/abs_0123vcxhf8/croot/numpy_and_numpy_base_1725470331966/work/dist/numpy-2.0.1-cp311-cp311-win_amd64.whl#sha256=46eb5850478cda64bda6d2f2d3d6ad8ceeb7cc168b83532e4f9dbbcb42e22ab2
 packaging==24.2
 pillow==11.1.0
 pymoo==0.6.1.3

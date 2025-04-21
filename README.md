@@ -3,84 +3,30 @@ Install miniconda https://docs.conda.io/en/latest/miniconda.html
 
 Create a conda environment for this project and activate the environment:
 
-```console
 $ conda create --name fyp python=3.11
 $ conda activate fyp
-```
 
 install the following:
 
-```console
-conda install conda-forge::gdal
-```
+$ conda install conda-forge::gdal
+
 
 ### Install backend (Python) dependencies
+With the conda environment active, enter the backend directory (folder where requirements.txt is inside):
 
-With the conda environment active, install the backend (Python) dependencies:
+(fyp)$ cd backend
+(fyp)$ pip install -r requirements.txt
 
-```console
-(cwindividual)$ cd backend
-(cwindividual)$ pip install -r requirements.txt
-```
-
-The main backend dependencies (see requirements.txt) are the Django framework itself (Django) and [django-cors-headers](https://pypi.org/project/django-cors-headers/) which is needed for CORS requests (since the request origin address http://localhost:5713 is different from the address that sent the JavaScript code to the browser http://localhost:8000).
 
 ### Start backend server
+Run backend server:
 
-To start the backend server cd into the backend folder where the manage.py file is (if not already there)
+(fyp)$ python manage.py runserver
 
-```console
-(cwindividual)$ cd backend
-```
-
-and run
-
-```console
-(cwindividual)$ python manage.py runserver
-```
-
-The server will start on http://localhost:8000
-
-### API app
-
-An "api" Django app has already been created with the command
-
-```console
-$ python manage.py startapp api
-```
-
-and can be tested by visiting http://localhost:8000/api/test.json
-
-## Vue frontend
-
-The `frontend` folder contains a [Vue/Vite project](https://vitejs.dev/guide/) and was created with:
-
-```console
-(cwindividual)$ npm create vite@latest
-```
-
-### Install frontend (JavaScript) dependencies
-
-To install the frontend (JavaScript) dependencies cd into the frontend folder
-
-```console
-(cwindividual)$ cd frontend
-```
-
-and run:
-
-```console
-(cwindividual)$ npm install
-```
-
-The main frontend dependencies (see package.json) are [vue](https://vuejs.org/guide/introduction.html) and [bootstrap](https://getbootstrap.com/docs/5.0/getting-started/download/).
 
 ### Start frontend server
+Create a seperate terminal and enter the frontend directory, then to run frontend server:
 
-To start the frontend server run
-
-```console
-(cwindividual)$ npm run dev
-```
-
-and the server will start on http://localhost:5173
+$ npm install
+$ npm run dev
+and the server will start on http://localhost:5173 (use this link)
