@@ -784,6 +784,7 @@ def password_api(request):
 
 def matchmake_api(request):
     userRating = request.user.overallRating
+    print(f'player: {userRating}')
     recommended_games = []
     today = datetime.datetime.now()
     games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(
@@ -801,7 +802,7 @@ def matchmake_api(request):
         gameRating /= len(players)
         gameRating = round(gameRating, 1)
         
-        if (userRating-1.3) <= gameRating <= (userRating+1.3):
+        if (userRating-1) <= gameRating <= (userRating+1):
             recommended_games.append(game)
 
     data = [game.as_dict() for game in recommended_games]
