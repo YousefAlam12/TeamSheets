@@ -789,7 +789,6 @@ def password_api(request):
 
 def matchmake_api(request):
     userRating = request.user.overallRating
-    print(f'player: {userRating}')
     recommended_games = []
     today = datetime.datetime.now()
     games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(

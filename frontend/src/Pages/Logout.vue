@@ -1,3 +1,5 @@
+<template></template>
+
 <script>
 import { useUserStore } from '../stores/user.js';
 
