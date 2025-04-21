@@ -35,7 +35,6 @@ router.beforeEach(async (to, from, next) => {
         credentials: 'include'
     })
     const data = await response.json()
-    console.log(data.isAuth)
 
     if(data.isAuth) {
         const store = useUserStore()

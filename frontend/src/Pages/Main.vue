@@ -92,7 +92,6 @@ export default {
         this.playedGames = data.playedGames
         this.user = useUserStore().user
         this.showFriendNotification = data.user.received_requests.length > 0 ? true : false
-        console.log(this.user)
     },
     methods: {
         // changes game tab
