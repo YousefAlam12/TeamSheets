@@ -311,13 +311,18 @@ def my_games_api(request):
         games = Game.objects.filter(
             Q(date__gt=today) | Q(date=today.date()) & Q(end_time__gte=today.time()), fulltime=False, players=request.user).order_by('date')
         myGames = [game.as_dict() for game in games]
+        if len(myGames) <= 0:
+            myGames = None
 
         games = Game.objects.filter(admin=request.user).order_by('-date')
         admin_games = [game.as_dict() for game in games]
+        if len(admin_games) <= 0:
+            admin_games = None
 
-        games = Game.objects.filter(
-            fulltime=True, players=request.user).order_by('-date')
+        games = Game.objects.filter(fulltime=True, players=request.user).order_by('-date')
         played_games = [game.as_dict() for game in games]
+        if len(played_games) <= 0:
+            played_games = None
 
         return JsonResponse({'myGames': myGames,
                              'adminGames': admin_games,

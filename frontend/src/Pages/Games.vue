@@ -221,7 +221,6 @@ export default {
             credentials: 'include'
         })
         const data = await response.json()
-        console.log(data)
         this.games = data.games
         this.shownGames = data.games
     },
@@ -317,6 +316,9 @@ export default {
                 filteredGames = filteredGames.filter(game => {
                     return (game.address+game.postcode).toLowerCase().includes(this.filter.address)
                 })
+            }
+            if (filteredGames.length <= 0) {
+                filteredGames = null
             }
             this.shownGames = filteredGames
         },
