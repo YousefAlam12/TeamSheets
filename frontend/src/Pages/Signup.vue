@@ -77,6 +77,7 @@ export default {
     async mounted() {
     },
     methods: {
+        // creates new user
         async createAccount() {
             await this.findGeo(this.postcode)
             if (!this.longitude || !this.latitude) {
@@ -113,6 +114,7 @@ export default {
                 this.errorMessage = data.error
             }
         },
+        // validates postcode entered
         async findGeo(postcode) {
             console.log(postcode)
             const response = await fetch(`https://api.postcodes.io/postcodes/${postcode}`)

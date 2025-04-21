@@ -52,13 +52,10 @@ export default {
             
             const data = await response.json()
             if (response.ok) {
-                // const data = await response.json()
                 console.log(data)
                 this.$router.push('/')
             }
             else {
-                // this.errorMessage = 'Invalid Details'
-                // const data = await response.json()
                 this.errorMessage = data.error
             }
         }

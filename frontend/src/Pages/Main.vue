@@ -48,7 +48,6 @@
         </ul>
 
         <div class="tab-content mt-3">
-            <!-- <p v-if="activeTab == 'myGames'">Show my games</p> -->
             <DisplayGames v-if="activeTab == 'myGames'" :games="myGames" />
             
             <DisplayGames v-if="activeTab == 'playedGames'" :games="playedGames" />
@@ -96,9 +95,11 @@ export default {
         console.log(this.user)
     },
     methods: {
+        // changes game tab
         setActiveTab(tab) {
             this.activeTab = tab
         },
+        // removes chosen notification 
         async clearNotification(notif) {
             const response = await fetch(`http://localhost:8000/gameInvite/${notif.game_id}`, {
                 method: 'DELETE',

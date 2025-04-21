@@ -76,6 +76,7 @@ export default {
         }
     },
     computed: {
+        // search for user in friends 
         filteredFriends() {
             return this.user.friends.filter(user => {
                 return user.username.toLowerCase().includes(this.userSearch.toLowerCase());
@@ -83,6 +84,7 @@ export default {
         }
     },
     methods: {
+        // sends game invite to chosen user
         async sendInvite(i, user) {
             const response = await fetch(`http://localhost:8000/gameInvite/${this.game.id}`, {
                 method: 'POST',

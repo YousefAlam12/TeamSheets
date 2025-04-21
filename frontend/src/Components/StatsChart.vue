@@ -16,6 +16,7 @@ export default {
         return {
         }
     },
+    // displays graph of users stats
     async mounted() {
         const ctx = document.getElementById('statsRadarChart')
         new Chart(ctx, {

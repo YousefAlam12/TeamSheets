@@ -120,6 +120,7 @@ export default {
         this.postcode = data.postcode
     },
     methods: {
+        // changes profile details 
         async editProfile() {
             await this.findGeo(this.postcode)
             if (!this.longitude || !this.latitude) {
@@ -155,6 +156,7 @@ export default {
                 this.successMessage = ''
             }
         },
+        // validates entered postcode
         async findGeo(postcode) {
             console.log(postcode)
             const response = await fetch(`https://api.postcodes.io/postcodes/${postcode}`)
@@ -168,6 +170,7 @@ export default {
                 this.latitude = null
             }
         },
+        // changes user password 
         async editPassword() {
             const response = await fetch('http://localhost:8000/password', {
                 method: 'PUT',

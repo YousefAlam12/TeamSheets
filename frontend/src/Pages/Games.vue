@@ -226,6 +226,7 @@ export default {
         this.shownGames = data.games
     },
     methods: {
+        // creates game 
         async createGame() {
             // validating fields 
             await this.findGeo(this.newGame.postcode)
@@ -268,6 +269,7 @@ export default {
                 this.successMessage = ''
             }
         },
+        // validates postcode entered
         async findGeo(postcode) {
             const response = await fetch(`https://api.postcodes.io/postcodes/${postcode}`)
             const data = await response.json()
@@ -280,6 +282,7 @@ export default {
                 this.newGame.latitude = null
             }
         },
+        // resets game fields
         resetNewGame() {
             this.newGame = {
                 name: '',
@@ -295,6 +298,7 @@ export default {
             }
             this.errorMessage = ''
         },
+        // filters games based on chosen parameters
         async filterGames(filteredGames) {
             if (this.filter.matchmake == true) {
                 const recommended = await this.matchmake()
@@ -316,11 +320,13 @@ export default {
             }
             this.shownGames = filteredGames
         },
+        // resets filter parameters
         resetFilters() {
             this.shownGames = this.games
             Object.keys(this.filter).forEach(key => {
                 this.filter[key] = null})
         },
+        // gets games of simillar overall skill
         async matchmake() {
             const response = await fetch('http://localhost:8000/matchmake', {
                 credentials: 'include'

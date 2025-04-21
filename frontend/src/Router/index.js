@@ -25,39 +25,6 @@ const router = createRouter({
         {path: '/profile', name: 'Profile', component: Profile, meta: {auth: true}},
         {path: '/gameDetails/:id', name: 'GameDetails', component: GameDetails, meta: {auth: true}, props: true},
 
-        // {
-        //     // path: '/gameDetails/:id', name: 'GameDetails', component: GameDetails, meta: {auth: true}, props: true,
-        //     path: '/gameDetails/:id', name: 'GameDetails', component: GameDetails, meta: {auth: true},
-        //     // check if game exists before going to page
-        //     beforeEnter: async (to, from, next) => {
-        //         const response = await fetch('http://localhost:8000/allGames', {
-        //             credentials: 'include'
-        //         })
-        //         const user = useUserStore().user
-        //         const data = await response.json()
-        //         const gameExists = await data.games.find(game => game.id == to.params.id)
-
-        //         // prevent access to game that does not exist
-        //         if (gameExists) {
-        //             // prevents access to private game if not a player/invited
-        //             if (gameExists.is_private && gameExists.admin.id != user.id) {
-        //                 if (!user.game_invites.some(invite => invite.game_id === gameExists.id) && !gameExists.players.some(player => player.id == user.id)) {
-        //                     next({name: 'Main'})
-        //                 }
-        //                 else {
-        //                     next()
-        //                 }
-        //             }
-        //             else {
-        //                 next()
-        //             }
-        //         }
-        //         else {
-        //             next({name: 'Main'})
-        //         }
-        //     }
-        // },
-
         // catches invalid paths
         { path: '/:catchAll(.*)', redirect: '/' }
     ]

@@ -3,7 +3,6 @@
         <div class="h1 text-center border rounded bg-light p-2 mb-3">
             Game Details
         </div>
-        <!-- <h5 class="card-title">{{ x.name }} <span class="badge bg-primary">{{ x.players ? x.players.length : '' }}/{{ x.totalPlayers }}</span></h5> -->
 
         <div class="card mt-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -23,7 +22,6 @@
                 </div>
                 
                 <div class="card-body">
-                    <!-- <h5 class="card-title">{{ game.name }} <span class="badge bg-primary">{{ game.players.length }}/{{ game.totalPlayers }}</span></h5> -->
                     <h5 class="card-title">
                         {{ game.name }} 
                         <span class="badge bg-primary">{{ game.players ? game.players.length : '' }}/{{ game.totalPlayers }}</span>
@@ -35,14 +33,12 @@
                             <h6 class="card-text"><u>Description:</u> 
                                 <button v-if="user && game && (user.id == game.admin.id && !game.fulltime)" class="btn btn-info btn-sm" @click="changeDescription = game.description"><i class="bi bi-pencil-square" data-bs-toggle="modal" data-bs-target="#descriptionModal"></i></button>
                             </h6>
-                            <!-- <p class="card-text">{{ game.description }}</p> -->
                             <p class="card-text" v-html="formatText(game.description)"></p>
                         </div>
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item" >Time: {{ game.start_time }} - {{ game.end_time }}</li>
                             <li class="list-group-item" >Price: £{{ game.price }}</li>
                             <li class="list-group-item" >Pitch: {{ game.address }} {{ game.postcode }}</li>
-                            <!-- <li v-if="game.admin" class="list-group-item" >Admin: {{ game.admin.username }}</li> -->
                             <li v-if="game.admin" class="list-group-item" >
                                 <button class="nav-link player-inspect" data-bs-toggle="modal" data-bs-target="#PlayerModal" @click="setSelectedPlayer(game.admin)">Admin: {{ game.admin.username }}</button>
                                 <PlayerInspect :isFulltime="game.fulltime" :player="selectedPlayer" :user="user" :isAdmin="user.id == game.admin.id" @sendFriendRequest="sendFriendRequest" @kickPlayer="kickPlayer"/>
@@ -68,6 +64,7 @@
                     </div>
                 </div>
 
+                <!-- displaying teams -->
                 <div v-else class="card-body d-flex align-items-start teams">
                     <table class="table table-primary">
                         <thead>
@@ -116,7 +113,6 @@
                             <tr class="text-center">
                                 <th>
                                     Players
-                                    <!-- <button class="btn btn-sm btn-success"><i class="bi bi-plus-circle-fill"></i></button> -->
                                     <InvitePlayer :user="user" :game="game"/>
                                 </th>
                             </tr>
@@ -195,15 +191,12 @@
                 </div>
 
                 <div v-if="loading == false" class="text-center d-flex flex-column align-items-center p-2 mb-2">
-                    <!-- <button v-if="!game.players.find(player => player.id == user.id)" @click="joinGame">Join</button> -->
                     <button v-if="paid == false" class="btn btn-success mb-2" @click="payGame">Pay</button>
                     <div v-if="!game.fulltime">
                         <label class="border p-2 rounded text-white bg-secondary" v-if="game.players ? game.players.length >= game.totalPlayers : ''">Game is full</label>
                         
                         <div class="mt-2">
-                            <!-- <button v-if="game.players ? !game.players.find(player => player.id == user.id) && game.players.length < game.totalPlayers : ''" @click="joinGame" class="btn btn-success">Join</button> -->
                             <button v-if="user && !isPlaying && game.players.length < game.totalPlayers" @click="joinGame" class="btn btn-success">Join</button>
-                            <!-- <button v-if="game.players ? game.players.find(player => player.id == user.id) : ''" @click="leaveGame" class="btn btn-warning">Leave</button> -->
                             <button v-if="user && isPlaying" @click="leaveGame" class="btn btn-warning">Leave</button>
                         </div>
                         <button v-if="user && (user.id == game.admin.id && !game.fulltime)" class="btn btn-danger mt-4" @click="cancelGame">Cancel Game</button>
@@ -349,6 +342,7 @@ export default {
             this.$router.push('/')
         }
 
+        // fulltime view of page
         if (this.game.fulltime) {
             const response2 = await fetch(`http://localhost:8000/ratings/${this.id}`, {
                 credentials: 'include'
@@ -358,6 +352,7 @@ export default {
         }
     },
     methods: {
+        // adds user to game as player
         async joinGame() {
             const response = await fetch(`http://localhost:8000/game/${this.id}`, {
                 method: 'POST',
@@ -379,6 +374,7 @@ export default {
                 this.user = useUserStore().user
             }
         },
+        // removes user as player from game
         async leaveGame() {
             if (confirm('Are you sure you want to leave this game?')) {
                 const response = await fetch(`http://localhost:8000/game/${this.id}`, {
@@ -404,6 +400,7 @@ export default {
                 }
             }
         },
+        // sets paid status for player
         async payGame() {
             const response = await fetch(`http://localhost:8000/game/${this.id}`, {
                 method: 'PUT',
@@ -422,6 +419,7 @@ export default {
                 this.paid = data.paid
             }
         },
+        // manual team changes for admin
         async changeTeam(player, team) {
             const response = await fetch(`http://localhost:8000/teams/${this.id}`, {
                 method: 'PUT',
@@ -439,6 +437,7 @@ export default {
                 this.game = data.game
             }
         },
+        // balances teams using algorithm
         async balanceTeams() {
             if (this.loading == false) {
                 this.loading = true
@@ -452,6 +451,7 @@ export default {
                 this.loading = false
             }
         },
+        // calls fulltime changing view
         async fulltime() {
             if (confirm("Are you sure you want to call fulltime? This is irreversible.")) {
                 if (this.loading == false) {
@@ -479,9 +479,11 @@ export default {
                 }
             }
         },
+        // sets player to be inspected
         async setSelectedPlayer(currentPlayer) {
             this.selectedPlayer = currentPlayer
         },
+        // updates players stats based on rating
         async ratePlayer() {
             const response = await fetch(`http://localhost:8000/ratings/${this.id}`, {
                 method: 'POST',
@@ -505,6 +507,7 @@ export default {
                 this.error = data.error
             }
         },
+        // sends friend request to player
         async sendFriendRequest(player) {
             const response = await fetch(`http://localhost:8000/send_friend_request`, {
                 method: 'POST',
@@ -522,6 +525,7 @@ export default {
                 this.user = useUserStore().user
             }
         },
+        // allows admin to remove player from game
         async kickPlayer(player) {
             if (confirm(`Are you sure you want to kick ${player.username} from the game?`)) {
                 if (this.loading == false) {
@@ -545,6 +549,7 @@ export default {
                 }
             }
         },
+        // change privacy game
         async togglePrivacy() {
             if (confirm(`Are you sure you want to change the privacy status of the game?`)) {
                 const response = await fetch(`http://localhost:8000/game/${this.id}`, {
@@ -564,6 +569,7 @@ export default {
                 }
             }
         },
+        // cancels game removing it from system
         async cancelGame() {
             if (confirm(`Are you sure you want to CANCEL this game?`)) {
                 if (this.loading == false) {
@@ -587,6 +593,7 @@ export default {
                 }
             }
         },
+        // enables notifications for game
         async subscribe() {
             const response = await fetch(`http://localhost:8000/game/${this.id}`, {
                 method: 'PUT',
@@ -604,6 +611,7 @@ export default {
                 this.user = useUserStore().user
             }
         },
+        // removes notifications on game
         async unsubscribe() {
             const response = await fetch(`http://localhost:8000/game/${this.id}`, {
                 method: 'DELETE',
@@ -621,6 +629,7 @@ export default {
                 this.user = useUserStore().user
             }
         },
+        // changes game description 
         async editDescription() {
             const response = await fetch(`http://localhost:8000/game/${this.id}`, {
                 method: 'PUT',
@@ -637,6 +646,7 @@ export default {
                 this.game = data.game
             }
         },
+        // formats description for better view
         formatText(text) {
             if (typeof text === 'string') {
                 return text.replace(/\n/g, '<br>')
