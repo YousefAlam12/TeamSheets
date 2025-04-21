@@ -801,7 +801,7 @@ def matchmake_api(request):
         gameRating /= len(players)
         gameRating = round(gameRating, 1)
         
-        if (userRating-1.5) <= gameRating <= (userRating+1.5):
+        if (userRating-1.3) <= gameRating <= (userRating+1.3):
             recommended_games.append(game)
 
     data = [game.as_dict() for game in recommended_games]
