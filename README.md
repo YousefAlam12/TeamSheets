@@ -30,3 +30,7 @@ Create a seperate terminal and enter the frontend directory, then to run fronten
 $ npm install
 $ npm run dev
 and the server will start on http://localhost:5173 (use this link)
+
+
+
+Note: all test users have password=test1234
