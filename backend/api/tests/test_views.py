@@ -186,7 +186,7 @@ class TestViews(TestCase):
         self.assertEqual(len(res.get('userList')), 3)
 
 
-    def test_friends_Accept(self):
+    def test_friends_POST(self):
         url = reverse('Friends')
         
         # user 1 send friend request to user 2
@@ -217,7 +217,7 @@ class TestViews(TestCase):
         self.assertEqual(len(friend_requests), 0)
 
 
-    def test_friends_Reject(self):
+    def test_friends_DELETE(self):
         url = reverse('Friends')
     
         # user 1 send friend request to user 2

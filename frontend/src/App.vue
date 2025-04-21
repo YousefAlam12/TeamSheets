@@ -3,7 +3,8 @@
         <nav v-if="!hideNavbar && store.user" class="navbar navbar-expand-lg navbar-light bg-light rounded"
             :class="{ 'expanded-navbar': isExpanded }">
             <div class="container-fluid">
-                <a class="navbar-brand">TeamSheets</a>
+                <!-- <a class="navbar-brand">TeamSheets</a> -->
+                <router-link class="navbar-brand" :to="{ name: 'Main' }">TeamSheets</router-link>
                 <!-- Navbar toggle button for mobile -->
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" :aria-expanded="isExpanded.toString()" aria-label="Toggle navigation"

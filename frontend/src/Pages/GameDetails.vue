@@ -42,22 +42,26 @@
                             <li class="list-group-item" >Time: {{ game.start_time }} - {{ game.end_time }}</li>
                             <li class="list-group-item" >Price: £{{ game.price }}</li>
                             <li class="list-group-item" >Pitch: {{ game.address }} {{ game.postcode }}</li>
-                            <li v-if="game.admin" class="list-group-item" >Admin: {{ game.admin.username }}</li>
+                            <!-- <li v-if="game.admin" class="list-group-item" >Admin: {{ game.admin.username }}</li> -->
+                            <li v-if="game.admin" class="list-group-item" >
+                                <button class="nav-link player-inspect" data-bs-toggle="modal" data-bs-target="#PlayerModal" @click="setSelectedPlayer(game.admin)">Admin: {{ game.admin.username }}</button>
+                                <PlayerInspect :isFulltime="game.fulltime" :player="selectedPlayer" :user="user" :isAdmin="user.id == game.admin.id" @sendFriendRequest="sendFriendRequest" @kickPlayer="kickPlayer"/>
+                            </li>
                         </ul>
                     </div>
                 </div>
 
-                <!-- temp -->
-                 <!-- ------------------------------------------------------------------------------ -->
-                 <div class="alert alert-danger mt-3" role="alert" v-if="error">
+                <!-- error msg -->
+                <div class="alert alert-danger mt-3" role="alert" v-if="error">
                     {{ error }}
                 </div>
                 
+                <!-- admin buttons -->
                  <div v-if="user.id && (user.id == game.admin.id && !game.fulltime)" class="text-center d-flex flex-column align-items-center p-2 mb-2">
                     <button @click="balanceTeams" class="btn btn-primary">Balance Teams</button>
                     <button @click="fulltime" class="btn btn-info mt-3">Fulltime</button>
                 </div>
-                <!-- ------------------------------------------------------------------------------ -->
+
                 <div v-if="loading" class="d-flex justify-content-center w-100 mb-3">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
