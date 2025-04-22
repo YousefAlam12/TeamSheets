@@ -43,7 +43,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="date" class="form-label">Date</label>
+                            <label for="date" class="form-label">Start Date</label>
                             <div class="input-group">
                                 <input v-model="newGame.date" type="date" class="form-control" id="date">
                                 <span class="input-group-text"><i class="bi bi-exclamation-circle"></i></span>
@@ -54,6 +54,14 @@
                             <label for="start-time" class="form-label">Start Time</label>
                             <div class="input-group">
                                 <input v-model="newGame.start_time" type="time" class="form-control" id="start-time">
+                                <span class="input-group-text"><i class="bi bi-exclamation-circle"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="end-date" class="form-label">End Date</label>
+                            <div class="input-group">
+                                <input v-model="newGame.end_date" type="date" class="form-control" id="end-date">
                                 <span class="input-group-text"><i class="bi bi-exclamation-circle"></i></span>
                             </div>
                         </div>
@@ -193,6 +201,7 @@ export default {
                 name: '',
                 date: '',
                 start_time: null,
+                end_date: null,
                 end_time: null,
                 description: '',
                 totalPlayers: null,

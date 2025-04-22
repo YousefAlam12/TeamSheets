@@ -338,18 +338,28 @@ def games_api(request):
         POST = POST['game']
 
         # check if necessary fields are filled
-        required_fields = ['name', 'date', 'start_time', 'end_time',
+        required_fields = ['name', 'date', 'start_time', 'end_date', 'end_time',
                            'totalPlayers', 'price', 'address', 'postcode', 'longitude', 'latitude']
 
         for field in required_fields:
             if not POST.get(field):
                 return JsonResponse({'error': f'Missing field: {field}'}, status=400)
+            
+        start = datetime.datetime.combine(datetime.datetime.strptime(POST['date'], '%Y-%m-%d'), datetime.datetime.strptime(POST['start_time'], '%H:%M').time())
+        end = datetime.datetime.combine(datetime.datetime.strptime(POST['end_date'], '%Y-%m-%d'), datetime.datetime.strptime(POST['end_time'], '%H:%M').time())
+        if start >= end:
+            return JsonResponse({'error': "Game can not end before it starts"}, status=400)
+        
+        now = datetime.datetime.now()
+        if now >= end or now > start:
+            return JsonResponse({'error': "Game can not be in the past"}, status=400)
 
         # creating new game
         newGame = Game(
             name=POST['name'],
             date=POST['date'],
             start_time=datetime.datetime.strptime(POST['start_time'], '%H:%M'),
+            end_date=POST['end_date'],
             end_time=datetime.datetime.strptime(POST['end_time'], '%H:%M'),
             description=POST['description'],
             totalPlayers=POST['totalPlayers'],
@@ -372,7 +382,7 @@ def games_api(request):
     # orders games by distance from user
     today = datetime.datetime.now()
     games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(
-        Q(date__gt=today) | Q(date=today.date()) & Q(end_time__gte=today.time()), fulltime=False, is_private=False).order_by('distance', 'date')
+        Q(date__gte=today.date()) & Q(end_time__gte=today.time()), fulltime=False, is_private=False).order_by('distance', 'date')
     data = [game.as_dict() for game in games]
     if len(data) <= 0:
         data = None

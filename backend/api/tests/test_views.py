@@ -26,11 +26,15 @@ class TestViews(TestCase):
             first_name="user4", last_name="testing", username="user4", password="password1", email="user4@email.com", date_of_birth=date(2000, 1, 1), postcode="E1 0QE", location=Point(-0.045764, 51.515359)
         )
 
+        d = date(2027, 8, 22)
+        start_t = time(12, 00)
+        end_t = time(14, 00)
+
         # test games
-        self.game1 = models.Game.objects.create(name="Game 1", date=date.today(), start_time=datetime.now(), end_time=(datetime.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user1, is_private=False, fulltime=False)
-        self.game2 = models.Game.objects.create(name="Game 2", date=date.today(), start_time=datetime.now(), end_time=(datetime.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user2, is_private=False, fulltime=False)
-        self.privateGame = models.Game.objects.create(name="Game 2", date=date.today(), start_time=datetime.now(), end_time=(datetime.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user3, is_private=True, fulltime=False)
-        self.fulltimeGame = models.Game.objects.create(name="Fulltime", date=date.today(), start_time=(datetime.now() - timedelta(hours=1)), end_time=datetime.now(), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user2, is_private=False, fulltime=True)
+        self.game1 = models.Game.objects.create(name="Game 1", date=d, start_time=start_t, end_date=d, end_time=end_t, totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user1, is_private=False, fulltime=False)
+        self.game2 = models.Game.objects.create(name="Game 2", date=d, start_time=start_t, end_date=d, end_time=end_t, totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user2, is_private=False, fulltime=False)
+        self.privateGame = models.Game.objects.create(name="Private", date=d, start_time=start_t, end_date=d, end_time=end_t, totalPlayers=10, price=5, address="Mile End Park Leisure Centre, Rhodeswell Rd, London", postcode="E3 4HL", location=Point(-0.031997, 51.519437), admin=self.user3, is_private=True, fulltime=False)
+        self.fulltimeGame = models.Game.objects.create(name="Fulltime", date=d, start_time=start_t, end_date=d, end_time=end_t, totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user2, is_private=False, fulltime=True)
 
         # GAME 1 test players
         models.Player.objects.create(user=self.user3, game=self.game1)
@@ -52,18 +56,22 @@ class TestViews(TestCase):
         self.user4.friends.add(self.user3)
 
         # Rating objects
-        models.Rating.objects.create(rater=self.user1, ratee=self.user2, game=self.fulltimeGame, attack=8, defence=4, strength=8, speed=7, technique=6)
+        models.Rating.objects.create(rater=self.user1, ratee=self.user2, game=self.fulltimeGame, attack=7, defence=4, strength=7, speed=7, technique=6)
 
 
     # Setup Method for team balancing algorithm test
     def team_balance_setup(self):
+        d = date(2027, 8, 22)
+        start_t = time(12, 00)
+        end_t = time(14, 00)
+
         # create test users
         for i in range(10):
             models.User.objects.create_user(
                 first_name=f"player{i+1}", last_name="testing", username=f"p{i+1}", password="password1", email=f"p{i+1}@email.com", date_of_birth=date(2000, 1, 1), postcode="IG11 9BX", location=Point(0.105618, 51.549457)
             )
         p1 = models.User.objects.get(username="p1")
-        game = models.Game.objects.create(name="Team Balance Game", date=date.today(), start_time=time(12, 0, 0), end_time=time(14, 0, 0), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=p1, is_private=False, fulltime=False)
+        game = models.Game.objects.create(name="Team Balance Game", date=d, start_time=start_t, end_date=d, end_time=end_t, totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=p1, is_private=False, fulltime=False)
 
         # create test players for test game
         for i in range(10):
@@ -340,8 +348,9 @@ class TestViews(TestCase):
         response = self.createPOST(url, {
             'game' : {
                 'name': "Test Game",
-                'date': date.today(),
+                'date': "2027-08-12",
                 'start_time': "12:00",
+                'end_date': "2027-08-12",
                 'end_time': "14:00",
                 'description': "testing 123.......",
                 'totalPlayers': 10,

@@ -13,8 +13,12 @@ class TestUrls(TestCase):
         self.user1 = models.User.objects.create_user(
             first_name="user1", last_name="testing", username="user1", password="password1", email="user1@email.com", date_of_birth=date(2000, 1, 1), postcode="IG11 9BX", location=Point(0.105618, 51.549457)
         )
+
+        d = date(2027, 8, 22)
+        start_t = time(12, 00)
+        end_t = time(14, 00)
         # test game
-        self.game1 = models.Game.objects.create(name="Game 1", date=date.today(), start_time=timezone.now(), end_time=(timezone.now() + timedelta(hours=1)), totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user1, is_private=False, fulltime=False)
+        self.game1 = models.Game.objects.create(name="Game 1", date=d, start_time=start_t, end_date=d, end_time=end_t, totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=self.user1, is_private=False, fulltime=False)
 
 
     def test_url_login(self):

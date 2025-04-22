@@ -61,7 +61,7 @@ export default {
         isFinished(game) {
             if (!game.fulltime) {
                 const now = new Date()
-                const game_date = new Date(`${game.date}T${game.end_time}`)
+                const game_date = new Date(`${game.end_date}T${game.end_time}`)
                 return game_date < now   
             }
         }

@@ -85,6 +85,7 @@ class Game(models.Model):
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
+    end_date = models.DateField()
     description = models.TextField(null=True, blank=True)
     totalPlayers = models.IntegerField()
     price = models.FloatField()
@@ -110,6 +111,7 @@ class Game(models.Model):
             'name': self.name,
             'date': self.date,
             'start_time': start_time,
+            'end_date': self.end_date,
             'end_time': end_time,
             'description': self.description,
             'totalPlayers': self.totalPlayers,
