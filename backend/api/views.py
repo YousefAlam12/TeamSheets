@@ -7,7 +7,7 @@ from .models import User, Game, Player, Rating, FriendRequest, GameInvite, Notif
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value, IntegerField
 from django.core.mail import send_mail
 from django.conf import settings
 import threading
@@ -309,17 +309,28 @@ def my_games_api(request):
         today = datetime.datetime.now()
 
         games = Game.objects.filter(
-            Q(date__gt=today) | Q(date=today.date()) & Q(end_time__gte=today.time()), fulltime=False, players=request.user).order_by('date')
+            fulltime=False,
+            players=request.user,
+        ).exclude(
+            Q(end_date__lt=today.date()) |
+            Q(end_date=today.date(), end_time__lte=today.time())
+        ).order_by('date', 'start_time')
         myGames = [game.as_dict() for game in games]
         if len(myGames) <= 0:
             myGames = None
 
-        games = Game.objects.filter(admin=request.user).order_by('-date')
+        games = Game.objects.filter(admin=request.user).order_by(
+            Case(
+                When(fulltime=True, then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            ),
+            'date', 'start_time')
         admin_games = [game.as_dict() for game in games]
         if len(admin_games) <= 0:
             admin_games = None
 
-        games = Game.objects.filter(fulltime=True, players=request.user).order_by('-date')
+        games = Game.objects.filter(fulltime=True, players=request.user).order_by('-end_date', '-end_time')
         played_games = [game.as_dict() for game in games]
         if len(played_games) <= 0:
             played_games = None
@@ -342,7 +353,12 @@ def games_api(request):
                            'totalPlayers', 'price', 'address', 'postcode', 'longitude', 'latitude']
 
         for field in required_fields:
-            if not POST.get(field):
+            if field == 'price':
+                try:
+                    POST['price'] < 0
+                except:
+                    return JsonResponse({'error': f'Missing field: {field}'}, status=400)
+            elif not POST.get(field):
                 return JsonResponse({'error': f'Missing field: {field}'}, status=400)
             
         start = datetime.datetime.combine(datetime.datetime.strptime(POST['date'], '%Y-%m-%d'), datetime.datetime.strptime(POST['start_time'], '%H:%M').time())
@@ -367,7 +383,7 @@ def games_api(request):
             address=POST['address'],
             postcode=POST['postcode'],
             location=Point(POST['longitude'], POST['latitude']),
-            is_private=POST['is_private'],
+            is_private=POST['privacy'],
             admin=request.user
         )
         newGame.save()
@@ -381,8 +397,16 @@ def games_api(request):
 
     # orders games by distance from user
     today = datetime.datetime.now()
-    games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(
-        Q(date__gte=today.date()) & Q(end_time__gte=today.time()), fulltime=False, is_private=False).order_by('distance', 'date')
+    games = Game.objects.annotate(
+        distance=Distance('location', request.user.location)
+        ).filter(
+            fulltime=False,
+            is_private=False
+        ).exclude(
+            Q(end_date__lt=today.date()) |
+            Q(end_date=today.date(), end_time__lte=today.time())
+        ).order_by('distance', 'date', 'start_time')
+
     data = [game.as_dict() for game in games]
     if len(data) <= 0:
         data = None
@@ -801,8 +825,15 @@ def matchmake_api(request):
     userRating = request.user.overallRating
     recommended_games = []
     today = datetime.datetime.now()
-    games = Game.objects.annotate(distance=Distance('location', request.user.location)).filter(
-        Q(date__gt=today) | Q(date=today.date()) & Q(end_time__gte=today.time()), fulltime=False, is_private=False).order_by('distance', 'date')
+    games = Game.objects.annotate(
+        distance=Distance('location', request.user.location)
+        ).filter(
+            fulltime=False,
+            is_private=False
+        ).exclude(
+            Q(end_date__lt=today.date()) |
+            Q(end_date=today.date(), end_time__lte=today.time())
+        ).order_by('distance', 'date', 'start_time')
     
     # finds recommended games based on user's stats
     for game in games:
@@ -816,7 +847,7 @@ def matchmake_api(request):
         gameRating /= len(players)
         gameRating = round(gameRating, 1)
         
-        if (userRating-1) <= gameRating <= (userRating+1):
+        if (userRating-1.2) <= gameRating <= (userRating+1.2):
             recommended_games.append(game)
 
     data = [game.as_dict() for game in recommended_games]

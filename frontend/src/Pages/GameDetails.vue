@@ -367,7 +367,6 @@ export default {
 
             const data = await response.json()
             if (response.ok) {
-                console.log(data)
                 this.game = data.game
                 this.paid = data.paid
                 useUserStore().saveUser(data.user)
@@ -587,7 +586,7 @@ export default {
         
                     const data = await response.json()
                     if (response.ok) {
-                        this.$router.push('/games')
+                        this.$router.push('/')
                     }
                     this.loading = false
                 }

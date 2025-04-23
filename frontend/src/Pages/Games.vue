@@ -113,7 +113,7 @@
 
                         <div class="mb-3">
                             <label for="privacy" class="form-label">Privacy Status</label>
-                            <select v-model="newGame.is_private" id="privacy" class="form-select">
+                            <select v-model="newGame.privacy" id="privacy" class="form-select">
                                 <option :value="false">Public</option>
                                 <option :value="true">Private</option>
                             </select>
@@ -210,7 +210,7 @@ export default {
                 postcode: '',
                 longitude: null,
                 latitude: null,
-                is_private: false
+                privacy: false
             },
             errorMessage : '',
             successMessage : '',
@@ -302,7 +302,8 @@ export default {
                 address: '',
                 postcode: '',
                 longitude: null,
-                latitude: null
+                latitude: null,
+                privacy: false
             }
             this.errorMessage = ''
         },

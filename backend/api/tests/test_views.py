@@ -56,7 +56,7 @@ class TestViews(TestCase):
         self.user4.friends.add(self.user3)
 
         # Rating objects
-        models.Rating.objects.create(rater=self.user1, ratee=self.user2, game=self.fulltimeGame, attack=7, defence=4, strength=7, speed=7, technique=6)
+        models.Rating.objects.create(rater=self.user1, ratee=self.user2, game=self.fulltimeGame, attack=8, defence=4, strength=7, speed=7, technique=6)
 
 
     # Setup Method for team balancing algorithm test
@@ -359,7 +359,7 @@ class TestViews(TestCase):
                 'postcode': "IG6 3HX",
                 'longitude': 0.100324,
                 'latitude': 51.598645,
-                'is_private': False
+                'privacy': False
             }
         })
         
@@ -690,8 +690,8 @@ class TestViews(TestCase):
         ad_balance = []
         skill_balance = []
 
-        # running team balance 3 times to find the average in the balance scores against different teams
-        for i in range(3):
+        # running team balance 5 times to find the average in the balance scores against different teams (to flatten outliers)
+        for i in range(5):
             response = self.client.get(url)
             res = response.json()
 
