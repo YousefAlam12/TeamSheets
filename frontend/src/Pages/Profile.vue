@@ -33,23 +33,21 @@
                         <h5 class="modal-title" id="editModalLabel">Edit Profile</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form @submit.prevent="editProfile">
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label">Email</label>
-                                <input v-model="email" type="email" class="form-control" id="email">
-                            </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input v-model="email" type="email" class="form-control" id="email">
+                        </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Postcode</label>
-                                <input v-model="postcode" type="text" class="form-control" id="postcode">
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label">Postcode</label>
+                            <input v-model="postcode" type="text" class="form-control" id="postcode">
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary" @click="editUser" data-bs-dismiss="modal">Save changes</button>
-                        </div>
-                    </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" data-bs-dismiss="modal" @click="editProfile">Save changes</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -69,6 +67,7 @@
                         <div class="mb-3">
                             <label for="newPassword" class="form-label">New Password</label>
                             <input v-model="password.new" type="password" class="form-control" id="newPassword">
+                            <small id="newpasswordInfo" class="form-text text-muted">Must be at least 8 characters.</small>
                         </div>
                     </div>
                     <div class="modal-footer">

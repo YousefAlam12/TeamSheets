@@ -1,6 +1,7 @@
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 import datetime
 from .models import User, Game, Player, Rating, FriendRequest, GameInvite, Notification
@@ -193,6 +194,13 @@ def signup(request):
         # Check if passwords match
         if password1 != password2:
             return JsonResponse({'error': 'Passwords do not match'}, status=400)
+        
+        # validate password
+        try:
+            validate_password(password1)
+        except ValidationError as e:
+            return JsonResponse({'error': 'Invalid password'}, status=400)
+
 
         try:
             # Create a new user
@@ -811,7 +819,7 @@ def password_api(request):
     if request.method == 'PUT':
         PUT = json.loads(request.body)
         valid = authenticate(username=user.username, password=PUT['old'])
-        if valid is None or PUT['new'] == '':
+        if valid is None or len(PUT['new']) < 8:
             return JsonResponse({'error': 'error'}, status=400)
         else:
             user.set_password(PUT['new'])

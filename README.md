@@ -34,3 +34,5 @@ and the server will start on http://localhost:5173 (use this link)
 
 
 Note: all test users have password=test1234
+
+When running tests exceptions can be ignored (occurs due to Django blocking sending emails during tests)

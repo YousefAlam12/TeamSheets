@@ -131,6 +131,22 @@ class TestViews(TestCase):
     
     def test_signup(self):
         url = reverse('Signup')
+        # invalid  details
+        bad_response = self.createPOST(url, {
+            'firstname': "test",
+            'lastname': "testing", 
+            'email': "new@email.com", 
+            'dob': date(2000, 1, 1), 
+            'postcode': "IG11 9BX", 
+            'longitude': 0.105618,
+            'latitude': 51.549457,
+            'username': "user1", 
+            'password1': "test1234", 
+            'password2': "test1234", 
+        })
+        self.assertEqual(bad_response.status_code, 400)
+        
+        # valid details
         response = self.createPOST(url, {
             'firstname': "test",
             'lastname': "testing", 
@@ -140,8 +156,8 @@ class TestViews(TestCase):
             'longitude': 0.105618,
             'latitude': 51.549457,
             'username': "newUser", 
-            'password1': "test1234", 
-            'password2': "test1234", 
+            'password1': "test12345", 
+            'password2': "test12345", 
         })
         newUser = models.User.objects.filter(username="newUser")
 
@@ -344,7 +360,28 @@ class TestViews(TestCase):
     def test_games_POST(self):
         url = reverse("Games")
         self.client.login(username="user1", password="password1")
-    
+
+        # invalid case
+        bad_response = self.createPOST(url, {
+            'game' : {
+                'name': "Test Game",
+                'date': "2027-08-12",
+                'start_time': "12:00",
+                'end_date': "2027-08-12",
+                'end_time': "11:00",
+                'description': "testing 123.......",
+                'totalPlayers': 14,
+                'price': 5,
+                'address': "Fairlop Oaks Playing Fields, Forest Rd, Ilford",
+                'postcode': "IG6 3HX",
+                'longitude': 0.100324,
+                'latitude': 51.598645,
+                'privacy': False
+            }
+        })
+        self.assertEqual(bad_response.status_code, 400)
+
+        # valid case
         response = self.createPOST(url, {
             'game' : {
                 'name': "Test Game",
@@ -696,6 +733,7 @@ class TestViews(TestCase):
             res = response.json()
 
             self.assertEqual(response.status_code, 200)
+            self.assertIsNotNone(res['game'])
 
             # check to see stats of teams are balanced in accordance to the 2 objectives (attack/defence and skills)
             A_attack = 0
