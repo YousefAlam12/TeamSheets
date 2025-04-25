@@ -819,8 +819,11 @@ def password_api(request):
     if request.method == 'PUT':
         PUT = json.loads(request.body)
         valid = authenticate(username=user.username, password=PUT['old'])
-        if valid is None or len(PUT['new']) < 8:
-            return JsonResponse({'error': 'error'}, status=400)
+        
+        if valid is None:
+            return JsonResponse({'error': 'Invalid old password'}, status=400)
+        elif len(PUT['new']) < 8:
+            return JsonResponse({'error': 'Invalid new password'}, status=400)
         else:
             user.set_password(PUT['new'])
             user.save()

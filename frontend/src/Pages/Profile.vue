@@ -190,7 +190,7 @@ export default {
                 this.successMessage = "Password change successfully"
             }
             else {
-                this.errorMessage = "Invalid Details"
+                this.errorMessage = data.error
                 this.successMessage = ''
             }
         }
