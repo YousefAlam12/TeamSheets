@@ -518,7 +518,7 @@ def game_api(request, game_id):
                 return JsonResponse({'error': 'only admin is allowed to do this'}, status=400)
             
             player = Player.objects.get(user=DELETE['kick'], game=game)
-            # send email to all players/subscribers
+            # send email to kicked player/subscribers
             gameNotification(
                 game,
                 f"{player.user.username} kicked from {game.name}",
