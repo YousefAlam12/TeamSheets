@@ -22,7 +22,7 @@
                             game.totalPlayers }}</span></h5>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">{{ game.start_time }} - {{ game.end_time }}</li>
-                        <li class="list-group-item">£{{ game.price }}</li>
+                        <li class="list-group-item">£{{ game.price.toFixed(2) }}</li>
                         <li class="list-group-item">Pitch: {{ game.address }} {{ game.postcode }}</li>
                     </ul>
             </div>

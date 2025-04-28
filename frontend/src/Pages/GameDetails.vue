@@ -37,7 +37,7 @@
                         </div>
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item" >Time: {{ game.start_time }} - {{ game.end_time }}</li>
-                            <li class="list-group-item" >Price: £{{ game.price }}</li>
+                            <li v-if="game.price" class="list-group-item" >Price: £{{ game.price.toFixed(2) }}</li>
                             <li class="list-group-item" >Pitch: {{ game.address }} {{ game.postcode }}</li>
                             <li v-if="game.admin" class="list-group-item" >
                                 <button class="nav-link player-inspect" data-bs-toggle="modal" data-bs-target="#PlayerModal" @click="setSelectedPlayer(game.admin)">Admin: {{ game.admin.username }}</button>
