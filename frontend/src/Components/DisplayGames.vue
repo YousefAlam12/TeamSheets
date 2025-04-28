@@ -3,7 +3,7 @@
         No games found...
     </div>
 
-    <div v-else class="card mt-3 hover-effect" v-for="game in games">
+    <div v-else class="card mt-3 mb-3 hover-effect" v-for="game in games">
         <router-link class="nav-link" :to="{ name: 'GameDetails', params: { id: game.id } }">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div>
