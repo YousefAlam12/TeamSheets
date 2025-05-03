@@ -1,4 +1,7 @@
-### Create conda environment
+### TeamSheets
+to run project:
+
+### Create Conda Environment
 Install miniconda https://docs.conda.io/en/latest/miniconda.html
 
 Create a conda environment for this project and activate the environment:
@@ -14,7 +17,6 @@ $ conda install conda-forge::gdal
 ### Install backend (Python) dependencies
 With the conda environment active, enter the backend directory (folder where requirements.txt is inside):
 
-(fyp)$ cd backend
 (fyp)$ pip install -r requirements.txt
 
 
