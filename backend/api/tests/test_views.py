@@ -14,16 +14,16 @@ class TestViews(TestCase):
 
         # test users
         self.user1 = models.User.objects.create_user(
-            first_name="user1", last_name="testing", username="user1", password="password1", email="user1@email.com", date_of_birth=date(2000, 1, 1), postcode="IG11 9BX", location=Point(0.105618, 51.549457)
+            first_name="user1", last_name="testing", username="user1", password="password1", email="user1@email.com", date_of_birth=date(2000, 1, 1), postcode="RM10 7AB", location=Point(0.105618, 51.549457)
         )
         self.user2 = models.User.objects.create_user(
-            first_name="user2", last_name="testing", username="user2", password="password1", email="user2@email.com", date_of_birth=date(2000, 1, 1), postcode="IG11 9BX", location=Point(0.105618, 51.549457)
+            first_name="user2", last_name="testing", username="user2", password="password1", email="user2@email.com", date_of_birth=date(2000, 1, 1), postcode="RM10 7AB", location=Point(0.105618, 51.549457)
         )
         self.user3 = models.User.objects.create_user(
-            first_name="user3", last_name="testing", username="user3", password="password1", email="user3@email.com", date_of_birth=date(2000, 1, 1), postcode="E1 0QE", location=Point(-0.045764, 51.515359)
+            first_name="user3", last_name="testing", username="user3", password="password1", email="user3@email.com", date_of_birth=date(2000, 1, 1), postcode="E1 0RA", location=Point(-0.045764, 51.515359)
         )
         self.user4 = models.User.objects.create_user(
-            first_name="user4", last_name="testing", username="user4", password="password1", email="user4@email.com", date_of_birth=date(2000, 1, 1), postcode="E1 0QE", location=Point(-0.045764, 51.515359)
+            first_name="user4", last_name="testing", username="user4", password="password1", email="user4@email.com", date_of_birth=date(2000, 1, 1), postcode="E1 0RA", location=Point(-0.045764, 51.515359)
         )
 
         d = date(2027, 8, 22)
@@ -68,7 +68,7 @@ class TestViews(TestCase):
         # create test users
         for i in range(10):
             models.User.objects.create_user(
-                first_name=f"player{i+1}", last_name="testing", username=f"p{i+1}", password="password1", email=f"p{i+1}@email.com", date_of_birth=date(2000, 1, 1), postcode="IG11 9BX", location=Point(0.105618, 51.549457)
+                first_name=f"player{i+1}", last_name="testing", username=f"p{i+1}", password="password1", email=f"p{i+1}@email.com", date_of_birth=date(2000, 1, 1), postcode="RM10 7AB", location=Point(0.105618, 51.549457)
             )
         p1 = models.User.objects.get(username="p1")
         game = models.Game.objects.create(name="Team Balance Game", date=d, start_time=start_t, end_date=d, end_time=end_t, totalPlayers=10, price=5, address="Fairlop Oaks Playing Fields, Forest Rd, Ilford", postcode="IG6 3HX", location=Point(0.100324, 51.598645), admin=p1, is_private=False, fulltime=False)
@@ -137,7 +137,7 @@ class TestViews(TestCase):
             'lastname': "testing", 
             'email': "new@email.com", 
             'dob': date(2000, 1, 1), 
-            'postcode': "IG11 9BX", 
+            'postcode': "RM10 7AB", 
             'longitude': 0.105618,
             'latitude': 51.549457,
             'username': "user1", 
@@ -152,7 +152,7 @@ class TestViews(TestCase):
             'lastname': "testing", 
             'email': "new@email.com", 
             'dob': date(2000, 1, 1), 
-            'postcode': "IG11 9BX", 
+            'postcode': "RM10 7AB", 
             'longitude': 0.105618,
             'latitude': 51.549457,
             'username': "newUser", 
@@ -293,7 +293,7 @@ class TestViews(TestCase):
             'email': "change@email.com",
             'longitude': -0.045764,
             'latitude': 51.515359,
-            'postcode': "E1 0QE",
+            'postcode': "E1 0RA",
         })
         res = response.json()
 
@@ -302,7 +302,7 @@ class TestViews(TestCase):
         user1 = models.User.objects.get(id=1)
 
         self.assertEqual(user1.email, "change@email.com")
-        self.assertEqual(user1.postcode, "E1 0QE")
+        self.assertEqual(user1.postcode, "E1 0RA")
         self.assertEqual(user1.location.x, -0.045764)
         self.assertEqual(user1.location.y, 51.515359)
         
