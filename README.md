@@ -3,7 +3,7 @@ to run project:
 
 ## NOTE (Only if zip file does not work): 
 You will need to change settings.py, and change the variable EMAIL_HOST_PASSWORD to use the registered authentication key.
-For security reasons this has been removed from the GIT repository.  Please contact me to get the key.
+For security reasons this has been removed from the GIT repository.  Please contact me to get the key or use key in zip file (this is only for email notifications).
 
 ### Create Conda Environment
 Install miniconda https://docs.conda.io/en/latest/miniconda.html
